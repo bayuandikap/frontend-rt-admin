@@ -1,99 +1,111 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export default function HouseForm({
-    house,
-    onSubmit,
-    onCancel,
-}) {
+export default function HouseForm({ house, onSubmit, onClose }) {
 
-    const [form, setForm] = useState({
-        house_number: "",
-        block: "",
-        status: "vacant",
-    });
+    const [houseNumber, setHouseNumber] = useState("");
+    const [block, setBlock] = useState("");
+    const [status, setStatus] = useState("vacant");
 
     useEffect(() => {
-
         if (house) {
-
-            setForm(house);
-
+            setHouseNumber(house.house_number);
+            setBlock(house.block);
+            setStatus(house.status);
         }
-
     }, [house]);
 
-    function handleChange(e) {
-
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value,
-        });
-
-    }
-
     function submit(e) {
-
         e.preventDefault();
 
-        onSubmit(form);
-
+        onSubmit({
+            house_number: houseNumber,
+            block,
+            status,
+        });
     }
 
     return (
+        <div className="card mb-3">
 
-        <form onSubmit={submit} className="card p-3 mb-3">
+            <div className="card-header">
+                <strong>
+                    {house ? "Edit House" : "Add House"}
+                </strong>
+            </div>
 
-            <input
-                className="form-control mb-2"
-                name="house_number"
-                placeholder="House Number"
-                value={form.house_number}
-                onChange={handleChange}
-            />
+            <div className="card-body">
 
-            <input
-                className="form-control mb-2"
-                name="block"
-                placeholder="Block"
-                value={form.block}
-                onChange={handleChange}
-            />
+                <form onSubmit={submit}>
 
-            <select
-                className="form-select mb-3"
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-            >
+                    <div className="mb-3">
 
-                <option value="occupied">
-                    Occupied
-                </option>
+                        <label>House Number</label>
 
-                <option value="vacant">
-                    Vacant
-                </option>
+                        <input
+                            className="form-control"
+                            value={houseNumber}
+                            onChange={(e) =>
+                                setHouseNumber(e.target.value)
+                            }
+                        />
 
-            </select>
+                    </div>
 
-            <button className="btn btn-primary">
+                    <div className="mb-3">
 
-                Save
+                        <label>Block</label>
 
-            </button>
+                        <input
+                            className="form-control"
+                            value={block}
+                            onChange={(e) =>
+                                setBlock(e.target.value)
+                            }
+                        />
 
-            <button
-                type="button"
-                className="btn btn-secondary mt-2"
-                onClick={onCancel}
-            >
+                    </div>
 
-                Cancel
+                    <div className="mb-3">
 
-            </button>
+                        <label>Status</label>
 
-        </form>
+                        <select
+                            className="form-select"
+                            value={status}
+                            onChange={(e) =>
+                                setStatus(e.target.value)
+                            }
+                        >
+                            <option value="occupied">
+                                Occupied
+                            </option>
 
+                            <option value="vacant">
+                                Vacant
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        className="btn btn-primary me-2"
+                    >
+                        Save
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
     );
-
 }

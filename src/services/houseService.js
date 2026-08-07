@@ -1,16 +1,17 @@
-import api from "../api/axios";
+import api from "./api";
 
-export const getHouses = (params) =>
-    api.get("/houses", { params });
+export function getHouses(params) {
+    return api.get("/houses", { params });
+}
 
-export const getHouse = (id) =>
-    api.get(`/houses/${id}`);
+export function createHouse(data) {
+    return api.post("/houses", data);
+}
 
-export const createHouse = (data) =>
-    api.post("/houses", data);
+export function updateHouse(id, data) {
+    return api.put(`/houses/${id}`, data);
+}
 
-export const updateHouse = (id, data) =>
-    api.put(`/houses/${id}`, data);
-
-export const deleteHouse = (id) =>
-    api.delete(`/houses/${id}`);
+export function deleteHouse(id) {
+    return api.delete(`/houses/${id}`);
+}
