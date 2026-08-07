@@ -8,6 +8,7 @@ import Payments from "../pages/Payments";
 import Expenses from "../pages/Expenses";
 import Reports from "../pages/Reports";
 import ProtectedRoute from "../components/ProtectedRoute";
+import HouseResidents from "../pages/HouseResidents";
 
 export default function AppRoutes() {
     return (
@@ -70,6 +71,11 @@ export default function AppRoutes() {
                         <Reports />
                     </ProtectedRoute>
                 }
+            />
+
+            <Route
+                path="/house-residents"
+                element={<HouseResidents />}
             />
 
         </Routes>

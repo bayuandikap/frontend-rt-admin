@@ -54,10 +54,17 @@ export default function Sidebar() {
                 </Link>
 
                 <Link
-                    className="d-block"
+                    className="d-block mb-2"
                     to="/reports"
                 >
                     Reports
+                </Link>
+
+                <Link
+                    className="d-block"
+                    to="/house-residents"
+                >
+                    House Residents
                 </Link>
 
             </div>
