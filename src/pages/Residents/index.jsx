@@ -59,7 +59,7 @@ export default function Residents() {
 
     async function remove(id) {
 
-        if (!window.confirm("Delete this house?"))
+        if (!window.confirm("Delete this resident?"))
             return;
 
         await deleteResident(id);
@@ -74,7 +74,7 @@ export default function Residents() {
 
             <div className="d-flex justify-content-between mb-3">
 
-                <h2>Houses</h2>
+                <h2>Residents</h2>
 
                 <button
                     className="btn btn-primary"
