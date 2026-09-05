@@ -75,7 +75,11 @@ export default function AppRoutes() {
 
             <Route
                 path="/house-residents"
-                element={<HouseResidents />}
+                element={
+                    <ProtectedRoute>
+                        <HouseResidents />
+                    </ProtectedRoute>
+                }
             />
 
         </Routes>
