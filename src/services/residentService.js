@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "../api/axios";
 
 export const getResidents = (params) =>
     api.get("/residents", { params });

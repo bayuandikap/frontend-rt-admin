@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "../api/axios";
 
 export function getHouses(params) {
     return api.get("/houses", { params });
