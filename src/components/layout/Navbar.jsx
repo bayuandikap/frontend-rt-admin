@@ -1,38 +1,43 @@
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-
     const navigate = useNavigate();
 
     function logout() {
-
         localStorage.removeItem("token");
-
         navigate("/");
-
     }
 
     return (
+        <nav className="navbar bg-white border-bottom sticky-top">
+            <div className="container-fluid px-4">
 
-        <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <div className="d-flex align-items-center">
+                    <span className="navbar-brand fw-bold mb-0">
+                        RT Admin
+                    </span>
 
-            <div className="container-fluid">
+                    <span className="text-muted small ms-2">
+                        Administration System
+                    </span>
+                </div>
 
-                <span className="navbar-brand">
-                    RT Administration
-                </span>
+                <div className="d-flex align-items-center gap-3">
 
-                <button
-                    className="btn btn-outline-danger"
-                    onClick={logout}
-                >
-                    Logout
-                </button>
+                    <span className="text-muted small d-none d-md-block">
+                        Administrator
+                    </span>
+
+                    <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={logout}
+                    >
+                        Logout
+                    </button>
+
+                </div>
 
             </div>
-
         </nav>
-
     );
-
 }
