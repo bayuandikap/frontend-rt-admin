@@ -1,3 +1,5 @@
+import { formatDate } from "../../utils/format";
+import StatusBadge from "../../components/common/StatusBadge";
 import { useEffect, useState } from "react";
 
 import MainLayout from "../../components/layout/MainLayout";
@@ -106,10 +108,8 @@ export default function Residents() {
 
     return (
         <MainLayout>
-
             {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-start mb-4">
-
+            <div className="d-flex justify-content-between align-items-start mb-4 gap-3">
                 <div>
                     <h2 className="mb-1">
                         Residents
@@ -121,25 +121,24 @@ export default function Residents() {
                 </div>
 
                 <button
-                    className="btn btn-primary"
+                    className="btn btn-primary flex-shrink-0"
                     onClick={openCreateForm}
                 >
                     + Add Resident
                 </button>
-
             </div>
 
             {/* Error */}
             {error && (
                 <div
-                    className="alert alert-danger d-flex justify-content-between align-items-center"
+                    className="alert alert-danger d-flex justify-content-between align-items-center gap-3"
                     role="alert"
                 >
                     <span>{error}</span>
 
                     <button
                         type="button"
-                        className="btn btn-sm btn-outline-danger"
+                        className="btn btn-sm btn-outline-danger flex-shrink-0"
                         onClick={loadData}
                     >
                         Try Again
@@ -158,13 +157,9 @@ export default function Residents() {
 
             {/* Filters */}
             <div className="card border-0 shadow-sm mb-4">
-
                 <div className="card-body">
-
                     <div className="row g-3">
-
                         <div className="col-md-8">
-
                             <label
                                 htmlFor="residentSearch"
                                 className="form-label small fw-semibold"
@@ -182,11 +177,9 @@ export default function Residents() {
                                     setSearch(e.target.value)
                                 }
                             />
-
                         </div>
 
                         <div className="col-md-4">
-
                             <label
                                 htmlFor="residentStatus"
                                 className="form-label small fw-semibold"
@@ -202,7 +195,6 @@ export default function Residents() {
                                     setResidentStatus(e.target.value)
                                 }
                             >
-
                                 <option value="">
                                     All statuses
                                 </option>
@@ -214,24 +206,17 @@ export default function Residents() {
                                 <option value="temporary">
                                     Temporary
                                 </option>
-
                             </select>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
 
-            {/* Residents Table */}
+            {/* Residents */}
             <div className="card border-0 shadow-sm">
-
+                {/* Card Header */}
                 <div className="card-header bg-white border-bottom py-3">
-
                     <div className="d-flex justify-content-between align-items-center">
-
                         <div>
                             <div className="fw-semibold">
                                 Resident List
@@ -243,162 +228,221 @@ export default function Residents() {
                                     : `${residents.length} resident${residents.length !== 1
                                         ? "s"
                                         : ""
-                                    } found`
-                                }
+                                    } found`}
                             </div>
                         </div>
-
                     </div>
-
                 </div>
 
-                <div className="table-responsive">
-
-                    <table className="table table-hover align-middle mb-0">
-
-                        <thead className="table-light">
-
+                {/* Desktop Table */}
+                <div className="d-none d-lg-block table-responsive">
+                    <table className="table table-vcenter rt-resident-table">
+                        <thead>
                             <tr>
-
-                                <th className="small text-muted fw-semibold">
-                                    No
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    NIK
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Name
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Phone
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Email
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Birth Date
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Status
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    Marital
-                                </th>
-
-                                <th className="small text-muted fw-semibold">
-                                    KTP
-                                </th>
-
-                                <th
-                                    className="small text-muted fw-semibold text-end"
-                                    style={{ minWidth: "150px" }}
-                                >
-                                    Actions
-                                </th>
-
+                                <th>NO</th>
+                                <th>NIK</th>
+                                <th>NAME</th>
+                                <th>PHONE</th>
+                                <th>EMAIL</th>
+                                <th>BIRTH DATE</th>
+                                <th>STATUS</th>
+                                <th>MARITAL</th>
+                                <th>KTP</th>
+                                <th>ACTIONS</th>
                             </tr>
-
                         </thead>
 
                         <tbody>
+                            {residents.map((resident, index) => (
+                                <tr key={resident.id}>
+                                    <td data-label="No">
+                                        {index + 1}
+                                    </td>
 
-                            {loading ? (
-                                <tr>
+                                    <td data-label="NIK">
+                                        {resident.nik || "-"}
+                                    </td>
 
                                     <td
-                                        colSpan="10"
-                                        className="text-center py-5"
+                                        data-label="Name"
+                                        className="fw-semibold"
                                     >
+                                        {resident.name || "-"}
+                                    </td>
 
-                                        <div
-                                            className="spinner-border spinner-border-sm text-primary me-2"
-                                            role="status"
+                                    <td data-label="Phone">
+                                        {resident.phone || "-"}
+                                    </td>
+
+                                    <td data-label="Email">
+                                        {resident.email || "-"}
+                                    </td>
+
+                                    <td data-label="Birth Date">
+                                        {formatDate(resident.birth_date)}
+                                    </td>
+
+                                    <td data-label="Status">
+                                        <StatusBadge
+                                            status={resident.resident_status}
+                                        />
+                                    </td>
+
+                                    <td data-label="Marital">
+                                        {resident.marital_status || "-"}
+                                    </td>
+
+                                    <td data-label="KTP">
+                                        {resident.ktp_photo ? (
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() =>
+                                                    window.open(
+                                                        resident.ktp_photo,
+                                                        "_blank"
+                                                    )
+                                                }
+                                            >
+                                                View
+                                            </button>
+                                        ) : (
+                                            "-"
+                                        )}
+                                    </td>
+
+                                    <td
+                                        data-label="Actions"
+                                        className="rt-resident-actions"
+                                    >
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-primary"
+                                            onClick={() =>
+                                                handleEdit(resident)
+                                            }
                                         >
-                                            <span className="visually-hidden">
-                                                Loading...
-                                            </span>
-                                        </div>
+                                            Edit
+                                        </button>
 
-                                        <span className="text-muted">
-                                            Loading residents...
-                                        </span>
-
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() =>
+                                                handleDelete(resident.id)
+                                            }
+                                        >
+                                            Delete
+                                        </button>
                                     </td>
-
                                 </tr>
-                            ) : residents.length === 0 ? (
-                                <tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
-                                    <td
-                                        colSpan="10"
-                                        className="text-center py-5"
-                                    >
+                {/* Mobile / Tablet Cards */}
+                <div className="d-lg-none">
+                    {loading ? (
+                        <div className="text-center py-5">
+                            <div
+                                className="spinner-border spinner-border-sm text-primary me-2"
+                                role="status"
+                            >
+                                <span className="visually-hidden">
+                                    Loading...
+                                </span>
+                            </div>
 
-                                        <div className="fw-semibold mb-1">
-                                            No residents found
-                                        </div>
+                            <span className="text-muted">
+                                Loading residents...
+                            </span>
+                        </div>
+                    ) : residents.length === 0 ? (
+                        <div className="text-center py-5 px-3">
+                            <div className="fw-semibold mb-1">
+                                No residents found
+                            </div>
 
-                                        <div className="text-muted small">
-                                            Try changing your search or
-                                            filter.
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-                            ) : (
-                                residents.map((resident, index) => (
-                                    <tr key={resident.id}>
-
-                                        <td className="text-muted">
-                                            {index + 1}
-                                        </td>
-
-                                        <td className="text-nowrap">
-                                            {resident.nik}
-                                        </td>
-
-                                        <td>
-                                            <div className="fw-semibold">
+                            <div className="text-muted small">
+                                Try changing your search or filter.
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-3">
+                            {residents.map((resident, index) => (
+                                <div
+                                    key={resident.id}
+                                    className="border rounded-3 p-3 mb-3"
+                                >
+                                    {/* Resident Identity */}
+                                    <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                        <div className="min-width-0">
+                                            <div className="fw-semibold text-truncate">
                                                 {resident.name}
                                             </div>
-                                        </td>
 
-                                        <td className="text-nowrap">
-                                            {resident.phone || "-"}
-                                        </td>
+                                            <div className="text-muted small">
+                                                NIK: {resident.nik}
+                                            </div>
+                                        </div>
 
-                                        <td>
-                                            {resident.email || "-"}
-                                        </td>
-
-                                        <td className="text-nowrap">
-                                            {resident.birth_date || "-"}
-                                        </td>
-
-                                        <td>
-                                            <StatusBadge
-                                                status={
-                                                    resident.resident_status
-                                                }
-                                            />
-                                        </td>
-
-                                        <td>
-                                            {resident.is_married
-                                                ? "Married"
-                                                : "Single"
+                                        <StatusBadge
+                                            status={
+                                                resident.resident_status
                                             }
-                                        </td>
+                                        />
+                                    </div>
 
-                                        <td>
+                                    {/* Details */}
+                                    <div className="row g-3 small">
+                                        <div className="col-6">
+                                            <div className="text-muted mb-1">
+                                                Phone
+                                            </div>
+
+                                            <div className="fw-medium text-break">
+                                                {resident.phone || "-"}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-6">
+                                            <div className="text-muted mb-1">
+                                                Birth Date
+                                            </div>
+
+                                            <div className="fw-medium">
+                                                {formatDate(resident.birth_date) || "-"}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-12">
+                                            <div className="text-muted mb-1">
+                                                Email
+                                            </div>
+
+                                            <div className="fw-medium text-break">
+                                                {resident.email || "-"}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-6">
+                                            <div className="text-muted mb-1">
+                                                Marital Status
+                                            </div>
+
+                                            <div className="fw-medium">
+                                                {resident.is_married
+                                                    ? "Married"
+                                                    : "Single"}
+                                            </div>
+                                        </div>
+
+                                        <div className="col-6">
+                                            <div className="text-muted mb-1">
+                                                KTP
+                                            </div>
+
                                             {resident.ktp_photo ? (
                                                 <a
                                                     href={resident.ktp_photo}
@@ -406,69 +450,46 @@ export default function Residents() {
                                                     rel="noreferrer"
                                                     className="btn btn-sm btn-outline-secondary"
                                                 >
-                                                    View
+                                                    View KTP
                                                 </a>
                                             ) : (
                                                 <span className="text-muted">
-                                                    -
+                                                    Not available
                                                 </span>
                                             )}
-                                        </td>
+                                        </div>
+                                    </div>
 
-                                        <td className="text-end text-nowrap">
+                                    {/* Actions */}
+                                    <div className="border-top mt-3 pt-3 d-flex gap-2">
+                                        <button
+                                            className="btn btn-sm btn-outline-primary flex-fill"
+                                            onClick={() =>
+                                                openEditForm(resident)
+                                            }
+                                        >
+                                            Edit
+                                        </button>
 
-                                            <button
-                                                className="btn btn-sm btn-outline-primary me-2"
-                                                onClick={() =>
-                                                    openEditForm(resident)
-                                                }
-                                            >
-                                                Edit
-                                            </button>
+                                        <button
+                                            className="btn btn-sm btn-outline-danger flex-fill"
+                                            onClick={() =>
+                                                remove(resident.id)
+                                            }
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
 
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() =>
-                                                    remove(resident.id)
-                                                }
-                                            >
-                                                Delete
-                                            </button>
-
-                                        </td>
-
-                                    </tr>
-                                ))
-                            )}
-
-                        </tbody>
-
-                    </table>
-
+                                    <div className="text-muted small mt-2">
+                                        Resident #{index + 1}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-
             </div>
-
         </MainLayout>
-    );
-}
-
-function StatusBadge({ status }) {
-    const normalizedStatus = status?.toLowerCase();
-
-    let className = "bg-secondary";
-
-    if (normalizedStatus === "permanent") {
-        className = "bg-success";
-    }
-
-    if (normalizedStatus === "temporary") {
-        className = "bg-warning text-dark";
-    }
-
-    return (
-        <span className={`badge ${className}`}>
-            {status || "Unknown"}
-        </span>
     );
 }

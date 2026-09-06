@@ -1,75 +1,68 @@
 import { NavLink } from "react-router-dom";
 
-export default function Sidebar() {
-
+export default function Sidebar({
+    mobileOpen = false,
+    onNavigate = () => { },
+}) {
     const menuItems = [
         {
             label: "Dashboard",
-            path: "/dashboard"
+            path: "/dashboard",
         },
         {
             label: "Houses",
-            path: "/houses"
+            path: "/houses",
         },
         {
             label: "Residents",
-            path: "/residents"
+            path: "/residents",
         },
         {
             label: "Payments",
-            path: "/payments"
+            path: "/payments",
         },
         {
             label: "Expenses",
-            path: "/expenses"
+            path: "/expenses",
         },
         {
             label: "Reports",
-            path: "/reports"
+            path: "/reports",
         },
         {
             label: "House Residents",
-            path: "/house-residents"
-        }
+            path: "/house-residents",
+        },
     ];
 
     return (
         <aside
-            className="bg-white border-end d-none d-md-block"
-            style={{
-                width: "240px",
-                flexShrink: 0
-            }}
+            className={`rt-sidebar bg-white border-end ${mobileOpen ? "rt-sidebar-open" : ""
+                }`}
         >
-
             <div className="p-3">
-
                 <div className="text-uppercase text-muted small fw-semibold mb-3">
                     Main Menu
                 </div>
 
                 <nav className="d-flex flex-column gap-1">
-
                     {menuItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            onClick={onNavigate}
                             className={({ isActive }) =>
-                                `text-decoration-none rounded px-3 py-2 ${
-                                    isActive
-                                        ? "bg-primary text-white"
-                                        : "text-dark"
+                                `text-decoration-none rounded px-3 py-2 ${isActive
+                                    ? "bg-primary text-white"
+                                    : "text-dark"
                                 }`
                             }
                         >
                             {item.label}
                         </NavLink>
                     ))}
-
                 </nav>
-
             </div>
-
         </aside>
     );
 }

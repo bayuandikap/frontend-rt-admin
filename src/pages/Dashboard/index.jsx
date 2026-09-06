@@ -1,3 +1,4 @@
+import StatusBadge from "../../components/common/StatusBadge";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 import MainLayout from "../../components/layout/MainLayout";
@@ -338,7 +339,7 @@ export default function Dashboard() {
                                 </td>
 
                                 <td>
-                                    <PaymentStatus
+                                    <StatusBadge
                                         status={item.status}
                                     />
                                 </td>
@@ -677,32 +678,6 @@ function ActivityTable({
             </div>
 
         </div>
-    );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Payment Status
-|--------------------------------------------------------------------------
-*/
-
-function PaymentStatus({ status }) {
-
-    const isPaid =
-        status === "paid";
-
-    return (
-        <span
-            className={`badge ${isPaid
-                    ? "bg-success"
-                    : "bg-danger"
-                }`}
-        >
-            {isPaid
-                ? "Paid"
-                : "Unpaid"}
-        </span>
     );
 }
 
