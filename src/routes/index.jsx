@@ -1,83 +1,124 @@
-import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import {
+    Routes,
+    Route,
+    Navigate,
+} from "react-router-dom";
 
 import Login from "../pages/Login";
-import Dashboard from "../pages/Dashboard";
-import Houses from "../pages/Houses";
-import Residents from "../pages/Residents";
-import Payments from "../pages/Payments";
-import Expenses from "../pages/Expenses";
-import Reports from "../pages/Reports";
-import ProtectedRoute from "../components/ProtectedRoute";
-import HouseResidents from "../pages/HouseResidents";
+import MainLayout from "../components/layout/MainLayout";
+
+// Lazy-loaded pages
+const Dashboard = lazy(() => import("../pages/Dashboard"));
+const Houses = lazy(() => import("../pages/Houses"));
+const Residents = lazy(() => import("../pages/Residents"));
+const HouseResidents = lazy(() => import("../pages/HouseResidents"));
+const Payments = lazy(() => import("../pages/Payments"));
+const Expenses = lazy(() => import("../pages/Expenses"));
+const Reports = lazy(() => import("../pages/Reports"));
+
+function PageLoader() {
+    return (
+        <MainLayout>
+            <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ minHeight: "300px" }}
+            >
+                <div className="text-center">
+                    <div
+                        className="spinner-border text-primary mb-3"
+                        role="status"
+                    >
+                        <span className="visually-hidden">
+                            Loading...
+                        </span>
+                    </div>
+
+                    <div className="text-muted">
+                        Loading page...
+                    </div>
+                </div>
+            </div>
+        </MainLayout>
+    );
+}
 
 export default function AppRoutes() {
     return (
-        <Routes>
+        <Suspense fallback={<PageLoader />}>
+            <Routes>
 
-            <Route
-                path="/"
-                element={<Login />}
-            />
+                {/* Login */}
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
 
-            <Route
-                path="/dashboard"
-                element={
-                    <ProtectedRoute>
-                        <Dashboard />
-                    </ProtectedRoute>
-                }
-            />
+                {/* Default */}
+                <Route
+                    path="/"
+                    element={
+                        <Navigate
+                            to="/dashboard"
+                            replace
+                        />
+                    }
+                />
 
-            <Route
-                path="/houses"
-                element={
-                    <ProtectedRoute>
-                        <Houses />
-                    </ProtectedRoute>
-                }
-            />
+                {/* Dashboard */}
+                <Route
+                    path="/dashboard"
+                    element={<Dashboard />}
+                />
 
-            <Route
-                path="/residents"
-                element={
-                    <ProtectedRoute>
-                        <Residents />
-                    </ProtectedRoute>
-                }
-            />
+                {/* Houses */}
+                <Route
+                    path="/houses"
+                    element={<Houses />}
+                />
 
-            <Route
-                path="/payments"
-                element={
-                    <ProtectedRoute>
-                        <Payments />
-                    </ProtectedRoute>
-                }
-            />
+                {/* Residents */}
+                <Route
+                    path="/residents"
+                    element={<Residents />}
+                />
 
-            <Route
-                path="/expenses"
-                element={
-                    <ProtectedRoute>
-                        <Expenses />
-                    </ProtectedRoute>
-                }
-            />
+                {/* House Residents */}
+                <Route
+                    path="/house-residents"
+                    element={<HouseResidents />}
+                />
 
-            <Route
-                path="/reports"
-                element={
-                    <ProtectedRoute>
-                        <Reports />
-                    </ProtectedRoute>
-                }
-            />
+                {/* Payments */}
+                <Route
+                    path="/payments"
+                    element={<Payments />}
+                />
 
-            <Route
-                path="/house-residents"
-                element={<HouseResidents />}
-            />
+                {/* Expenses */}
+                <Route
+                    path="/expenses"
+                    element={<Expenses />}
+                />
 
-        </Routes>
+                {/* Reports */}
+                <Route
+                    path="/reports"
+                    element={<Reports />}
+                />
+
+                {/* Unknown route */}
+                <Route
+                    path="*"
+                    element={
+                        <Navigate
+                            to="/dashboard"
+                            replace
+                        />
+                    }
+                />
+
+            </Routes>
+        </Suspense>
     );
 }

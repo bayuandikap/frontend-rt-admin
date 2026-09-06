@@ -1,7 +1,13 @@
-import api from "./api";
+import api from "../api/axios";
 
-export function getHouses(params) {
-    return api.get("/houses", { params });
+export function getHouses(params = {}) {
+    return api.get("/houses", {
+        params,
+    });
+}
+
+export function getHouse(id) {
+    return api.get(`/houses/${id}`);
 }
 
 export function createHouse(data) {

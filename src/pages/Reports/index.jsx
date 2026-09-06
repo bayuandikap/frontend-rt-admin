@@ -1,499 +1,515 @@
 import { useEffect, useState } from "react";
+
 import MainLayout from "../../components/layout/MainLayout";
-import { getReport } from "../../services/reportService";
+import Loading from "../../components/common/Loading";
+import ErrorAlert from "../../components/common/ErrorAlert";
+import EmptyState from "../../components/common/EmptyState";
+
+import { getMonthlyFinancialReport } from "../../services/reportService";
+
+import {
+    formatCurrency,
+    formatDate,
+    formatMonth,
+} from "../../utils/format";
 
 export default function Reports() {
-
     const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth() + 1;
 
-    const [year, setYear] = useState(currentYear);
-    const [month, setMonth] = useState(currentMonth);
+    const currentMonth =
+        new Date().getMonth() + 1;
 
-    const [report, setReport] = useState(null);
+    const [year, setYear] =
+        useState(currentYear);
+
+    const [month, setMonth] =
+        useState(currentMonth);
+
+    const [report, setReport] =
+        useState(null);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    async function loadReport() {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response =
+                await getMonthlyFinancialReport({
+                    year,
+                    month,
+                });
+
+            setReport(response.data);
+        } catch (err) {
+            console.error(err);
+
+            setError(
+                err.response?.data?.message ||
+                "Unable to load financial report."
+            );
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
         loadReport();
-    }, []);
+    }, [year, month]);
 
-    async function loadReport() {
+    const summary = report?.summary || {
+        income: 0,
+        expense: 0,
+        balance: 0,
+    };
 
-        try {
+    const months =
+        report?.months || [];
 
-            const res = await getReport({
-                year,
-                month,
-            });
+    const paymentDetails =
+        report?.payment_details || [];
 
-            setReport(res.data);
-
-        } catch (err) {
-
-            console.error(err);
-
-            alert("Failed to load report.");
-
-        }
-
-    }
-
-    function money(value) {
-
-        return new Intl.NumberFormat("id-ID", {
-
-            style: "currency",
-
-            currency: "IDR",
-
-        }).format(value);
-
-    }
-
-    if (!report) {
-
-        return (
-
-            <MainLayout>
-
-                Loading...
-
-            </MainLayout>
-
-        );
-
-    }
+    const expenseDetails =
+        report?.expense_details || [];
 
     return (
-
         <MainLayout>
+            <div className="mb-4">
+                <h2 className="mb-1">
+                    Financial Reports
+                </h2>
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
+                <p className="text-muted mb-0">
+                    Review income, expenses and
+                    monthly financial performance.
+                </p>
+            </div>
 
-                <h2>Financial Report</h2>
+            <div className="card mb-4">
+                <div className="card-body">
+                    <div className="row align-items-end">
+                        <div className="col-md-4 mb-3 mb-md-0">
+                            <label className="form-label">
+                                Year
+                            </label>
 
-                <div className="d-flex gap-2">
+                            <input
+                                type="number"
+                                className="form-control"
+                                value={year}
+                                min="2000"
+                                max="2100"
+                                onChange={(e) =>
+                                    setYear(
+                                        e.target.value
+                                    )
+                                }
+                            />
+                        </div>
 
-                    <select
-                        className="form-select"
-                        style={{ width: 150 }}
-                        value={month}
-                        onChange={(e) =>
-                            setMonth(e.target.value)
-                        }
-                    >
+                        <div className="col-md-4 mb-3 mb-md-0">
+                            <label className="form-label">
+                                Month
+                            </label>
 
-                        {Array.from({ length: 12 }).map((_, i) => (
-
-                            <option
-                                key={i + 1}
-                                value={i + 1}
+                            <select
+                                className="form-select"
+                                value={month}
+                                onChange={(e) =>
+                                    setMonth(
+                                        e.target.value
+                                    )
+                                }
                             >
-
-                                {new Date(
-                                    0,
-                                    i
-                                ).toLocaleString(
-                                    "default",
+                                {Array.from(
                                     {
-                                        month: "long",
-                                    }
+                                        length: 12,
+                                    },
+                                    (_, index) =>
+                                        index + 1
+                                ).map(
+                                    (
+                                        monthNumber
+                                    ) => (
+                                        <option
+                                            key={
+                                                monthNumber
+                                            }
+                                            value={
+                                                monthNumber
+                                            }
+                                        >
+                                            {formatMonth(
+                                                monthNumber
+                                            )}
+                                        </option>
+                                    )
                                 )}
-
-                            </option>
-
-                        ))}
-
-                    </select>
-
-                    <input
-                        type="number"
-                        className="form-control"
-                        style={{ width: 120 }}
-                        value={year}
-                        onChange={(e) =>
-                            setYear(e.target.value)
-                        }
-                    />
-
-                    <button
-                        className="btn btn-primary"
-                        onClick={loadReport}
-                    >
-
-                        Load Report
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            <div className="row mb-4">
-
-                <div className="col-md-4">
-
-                    <div className="card">
-
-                        <div className="card-body">
-
-                            <div className="text-secondary">
-
-                                Total Income
-
-                            </div>
-
-                            <h3>
-
-                                {money(report.summary.income)}
-
-                            </h3>
-
+                            </select>
                         </div>
 
-                    </div>
-
-                </div>
-
-                <div className="col-md-4">
-
-                    <div className="card">
-
-                        <div className="card-body">
-
-                            <div className="text-secondary">
-
-                                Total Expense
-
-                            </div>
-
-                            <h3>
-
-                                {money(report.summary.expense)}
-
-                            </h3>
-
+                        <div className="col-md-4">
+                            <button
+                                type="button"
+                                className="btn btn-primary w-100"
+                                onClick={
+                                    loadReport
+                                }
+                            >
+                                Refresh Report
+                            </button>
                         </div>
-
                     </div>
-
                 </div>
-
-                <div className="col-md-4">
-
-                    <div className="card">
-
-                        <div className="card-body">
-
-                            <div className="text-secondary">
-
-                                Balance
-
-                            </div>
-
-                            <h3>
-
-                                {money(report.summary.balance)}
-
-                            </h3>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
             </div>
 
-            <div className="card mb-4">
-
-                <div className="card-header">
-
-                    <strong>
-
-                        Monthly Summary ({report.year})
-
-                    </strong>
-
+            {loading ? (
+                <div className="card">
+                    <Loading message="Loading financial report..." />
                 </div>
-
-                <div className="table-responsive">
-
-                    <table className="table card-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Month</th>
-
-                                <th>Income</th>
-
-                                <th>Expense</th>
-
-                                <th>Balance</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {report.months.map((item) => (
-
-                                <tr key={item.month}>
-
-                                    <td>
-
-                                        {item.month_name}
-
-                                    </td>
-
-                                    <td>
-
-                                        {money(item.income)}
-
-                                    </td>
-
-                                    <td>
-
-                                        {money(item.expense)}
-
-                                    </td>
-
-                                    <td>
-
-                                        {money(item.balance)}
-
-                                    </td>
-
-                                </tr>
-
-                            ))}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <div className="card mb-4">
-
-                <div className="card-header">
-
-                    <strong>
-
-                        Payment Details ({report.selected_month}/{report.year})
-
-                    </strong>
-
-                </div>
-
-                <div className="table-responsive">
-
-                    <table className="table card-table table-hover">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>House</th>
-
-                                <th>Block</th>
-
-                                <th>Payment Type</th>
-
-                                <th>Amount</th>
-
-                                <th>Status</th>
-
-                                <th>Paid Date</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {report.payment_details.length === 0 && (
-
-                                <tr>
-
-                                    <td
-                                        colSpan="6"
-                                        className="text-center"
-                                    >
-
-                                        No payment data
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                            {report.payment_details.map((payment) => (
-
-                                <tr key={payment.id}>
-
-                                    <td>
-
-                                        {payment.house}
-
-                                    </td>
-
-                                    <td>
-
-                                        {payment.block}
-
-                                    </td>
-
-                                    <td>
-
-                                        {payment.payment_type}
-
-                                    </td>
-
-                                    <td>
-
-                                        {money(payment.amount)}
-
-                                    </td>
-
-                                    <td>
-
-                                        {payment.status === "paid" ? (
-
-                                            <span className="badge bg-green">
-
-                                                Paid
-
-                                            </span>
-
-                                        ) : (
-
-                                            <span className="badge bg-red">
-
-                                                Unpaid
-
-                                            </span>
-
+            ) : error ? (
+                <ErrorAlert
+                    message={error}
+                    onRetry={loadReport}
+                />
+            ) : (
+                <>
+                    <div className="row mb-4">
+                        <div className="col-md-4 mb-3">
+                            <div className="card h-100">
+                                <div className="card-body">
+                                    <div className="text-muted mb-2">
+                                        Total Income
+                                    </div>
+
+                                    <h3>
+                                        {formatCurrency(
+                                            summary.income
                                         )}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
 
-                                    </td>
+                        <div className="col-md-4 mb-3">
+                            <div className="card h-100">
+                                <div className="card-body">
+                                    <div className="text-muted mb-2">
+                                        Total Expense
+                                    </div>
 
-                                    <td>
+                                    <h3>
+                                        {formatCurrency(
+                                            summary.expense
+                                        )}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
 
-                                        {payment.paid_at ?? "-"}
+                        <div className="col-md-4 mb-3">
+                            <div className="card h-100">
+                                <div className="card-body">
+                                    <div className="text-muted mb-2">
+                                        Balance
+                                    </div>
 
-                                    </td>
+                                    <h3>
+                                        {formatCurrency(
+                                            summary.balance
+                                        )}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                </tr>
+                    <div className="card mb-4">
+                        <div className="card-header">
+                            <strong>
+                                {report?.year} Monthly Summary
+                            </strong>
+                        </div>
 
-                            ))}
+                        {months.length === 0 ? (
+                            <EmptyState message="No monthly financial data available." />
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table card-table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Month
+                                            </th>
+                                            <th>
+                                                Income
+                                            </th>
+                                            <th>
+                                                Expense
+                                            </th>
+                                            <th>
+                                                Balance
+                                            </th>
+                                        </tr>
+                                    </thead>
 
-                        </tbody>
+                                    <tbody>
+                                        {months.map(
+                                            (
+                                                item
+                                            ) => (
+                                                <tr
+                                                    key={
+                                                        item.month
+                                                    }
+                                                    className={
+                                                        Number(
+                                                            item.month
+                                                        ) ===
+                                                        Number(
+                                                            report.selected_month
+                                                        )
+                                                            ? "table-active"
+                                                            : ""
+                                                    }
+                                                >
+                                                    <td>
+                                                        <strong>
+                                                            {
+                                                                item.month_name
+                                                            }
+                                                        </strong>
+                                                    </td>
 
-                    </table>
+                                                    <td>
+                                                        {formatCurrency(
+                                                            item.income
+                                                        )}
+                                                    </td>
 
-                </div>
+                                                    <td>
+                                                        {formatCurrency(
+                                                            item.expense
+                                                        )}
+                                                    </td>
 
-            </div>
+                                                    <td>
+                                                        <strong>
+                                                            {formatCurrency(
+                                                                item.balance
+                                                            )}
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
 
-            <div className="card">
+                    <div className="card mb-4">
+                        <div className="card-header">
+                            <strong>
+                                Payment Details
+                            </strong>
+                        </div>
 
-                <div className="card-header">
+                        {paymentDetails.length ===
+                        0 ? (
+                            <EmptyState message="No payment data for the selected month." />
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table card-table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                No
+                                            </th>
+                                            <th>
+                                                House
+                                            </th>
+                                            <th>
+                                                Block
+                                            </th>
+                                            <th>
+                                                Payment Type
+                                            </th>
+                                            <th>
+                                                Amount
+                                            </th>
+                                            <th>
+                                                Status
+                                            </th>
+                                            <th>
+                                                Paid Date
+                                            </th>
+                                            <th>
+                                                Notes
+                                            </th>
+                                        </tr>
+                                    </thead>
 
-                    <strong>
+                                    <tbody>
+                                        {paymentDetails.map(
+                                            (
+                                                payment,
+                                                index
+                                            ) => (
+                                                <tr
+                                                    key={
+                                                        payment.id
+                                                    }
+                                                >
+                                                    <td>
+                                                        {index +
+                                                            1}
+                                                    </td>
 
-                        Expense Details ({report.selected_month}/{report.year})
+                                                    <td>
+                                                        {payment.house ||
+                                                            "-"}
+                                                    </td>
 
-                    </strong>
+                                                    <td>
+                                                        {payment.block ||
+                                                            "-"}
+                                                    </td>
 
-                </div>
+                                                    <td>
+                                                        {payment.payment_type ||
+                                                            "-"}
+                                                    </td>
 
-                <div className="table-responsive">
+                                                    <td>
+                                                        {formatCurrency(
+                                                            payment.amount
+                                                        )}
+                                                    </td>
 
-                    <table className="table card-table table-hover">
+                                                    <td>
+                                                        <span
+                                                            className={`badge ${
+                                                                payment.status ===
+                                                                "paid"
+                                                                    ? "bg-success"
+                                                                    : "bg-warning text-dark"
+                                                            }`}
+                                                        >
+                                                            {
+                                                                payment.status
+                                                            }
+                                                        </span>
+                                                    </td>
 
-                        <thead>
+                                                    <td>
+                                                        {formatDate(
+                                                            payment.paid_at
+                                                        )}
+                                                    </td>
 
-                            <tr>
+                                                    <td>
+                                                        {payment.notes ||
+                                                            "-"}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
 
-                                <th>Title</th>
+                    <div className="card mb-4">
+                        <div className="card-header">
+                            <strong>
+                                Expense Details
+                            </strong>
+                        </div>
 
-                                <th>Amount</th>
+                        {expenseDetails.length ===
+                        0 ? (
+                            <EmptyState message="No expense data for the selected month." />
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table card-table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                No
+                                            </th>
+                                            <th>
+                                                Title
+                                            </th>
+                                            <th>
+                                                Amount
+                                            </th>
+                                            <th>
+                                                Date
+                                            </th>
+                                            <th>
+                                                Description
+                                            </th>
+                                        </tr>
+                                    </thead>
 
-                                <th>Date</th>
+                                    <tbody>
+                                        {expenseDetails.map(
+                                            (
+                                                expense,
+                                                index
+                                            ) => (
+                                                <tr
+                                                    key={
+                                                        expense.id
+                                                    }
+                                                >
+                                                    <td>
+                                                        {index +
+                                                            1}
+                                                    </td>
 
-                                <th>Description</th>
+                                                    <td>
+                                                        <strong>
+                                                            {
+                                                                expense.title
+                                                            }
+                                                        </strong>
+                                                    </td>
 
-                            </tr>
+                                                    <td>
+                                                        {formatCurrency(
+                                                            expense.amount
+                                                        )}
+                                                    </td>
 
-                        </thead>
+                                                    <td>
+                                                        {formatDate(
+                                                            expense.expense_date
+                                                        )}
+                                                    </td>
 
-                        <tbody>
-
-                            {report.expense_details.length === 0 && (
-
-                                <tr>
-
-                                    <td
-                                        colSpan="4"
-                                        className="text-center"
-                                    >
-
-                                        No expense data
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                            {report.expense_details.map((expense) => (
-
-                                <tr key={expense.id}>
-
-                                    <td>
-
-                                        {expense.title}
-
-                                    </td>
-
-                                    <td>
-
-                                        {money(expense.amount)}
-
-                                    </td>
-
-                                    <td>
-
-                                        {expense.expense_date}
-
-                                    </td>
-
-                                    <td>
-
-                                        {expense.description || "-"}
-
-                                    </td>
-
-                                </tr>
-
-                            ))}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
+                                                    <td>
+                                                        {expense.description ||
+                                                            "-"}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </MainLayout>
-
     );
-
 }

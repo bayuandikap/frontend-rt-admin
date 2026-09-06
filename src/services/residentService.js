@@ -1,21 +1,23 @@
-import api from "./api";
+import api from "../api/axios";
 
-export const getResidents = (params) =>
-    api.get("/residents", { params });
-
-export const createResident = (data) =>
-    api.post("/residents", data, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
+export function getResidents(params = {}) {
+    return api.get("/residents", {
+        params,
     });
+}
 
-export const updateResident = (id, data) =>
-    api.post(`/residents/${id}?_method=PUT`, data, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    });
+export function getResident(id) {
+    return api.get(`/residents/${id}`);
+}
 
-export const deleteResident = (id) =>
-    api.delete(`/residents/${id}`);
+export function createResident(data) {
+    return api.post("/residents", data);
+}
+
+export function updateResident(id, data) {
+    return api.put(`/residents/${id}`, data);
+}
+
+export function deleteResident(id) {
+    return api.delete(`/residents/${id}`);
+}

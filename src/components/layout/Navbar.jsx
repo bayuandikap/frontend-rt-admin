@@ -1,15 +1,40 @@
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
+import { logout as logoutApi } from "../../services/authService";
 
 export default function Navbar() {
 
     const navigate = useNavigate();
 
-    function logout() {
+    async function handleLogout() {
 
-        localStorage.removeItem("token");
+        const result = await Swal.fire({
+            icon: "question",
+            title: "Logout?",
+            text: "Are you sure you want to sign out?",
+            showCancelButton: true,
+            confirmButtonText: "Logout",
+            cancelButtonText: "Cancel",
+        });
 
-        navigate("/");
+        if (!result.isConfirmed) {
+            return;
+        }
 
+        try {
+            await logoutApi();
+        } catch (error) {
+            console.error(error);
+        } finally {
+
+            localStorage.removeItem("token");
+
+            navigate("/", {
+                replace: true,
+            });
+
+        }
     }
 
     return (
@@ -18,13 +43,13 @@ export default function Navbar() {
 
             <div className="container-fluid">
 
-                <span className="navbar-brand">
+                <span className="navbar-brand fw-semibold">
                     RT Administration
                 </span>
 
                 <button
                     className="btn btn-outline-danger"
-                    onClick={logout}
+                    onClick={handleLogout}
                 >
                     Logout
                 </button>
@@ -34,5 +59,4 @@ export default function Navbar() {
         </nav>
 
     );
-
 }

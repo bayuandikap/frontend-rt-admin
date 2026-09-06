@@ -1,76 +1,75 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
 
-    return (
+    const menuItems = [
+        {
+            label: "Dashboard",
+            path: "/dashboard"
+        },
+        {
+            label: "Houses",
+            path: "/houses"
+        },
+        {
+            label: "Residents",
+            path: "/residents"
+        },
+        {
+            label: "Payments",
+            path: "/payments"
+        },
+        {
+            label: "Expenses",
+            path: "/expenses"
+        },
+        {
+            label: "Reports",
+            path: "/reports"
+        },
+        {
+            label: "House Residents",
+            path: "/house-residents"
+        }
+    ];
 
-        <div
-            className="bg-light border-end"
+    return (
+        <aside
+            className="bg-white border-end d-none d-md-block"
             style={{
-                width: 240,
-                minHeight: "100vh"
+                width: "240px",
+                flexShrink: 0
             }}
         >
 
             <div className="p-3">
 
-                <h5>Menu</h5>
+                <div className="text-uppercase text-muted small fw-semibold mb-3">
+                    Main Menu
+                </div>
 
-                <hr />
+                <nav className="d-flex flex-column gap-1">
 
-                <Link
-                    className="d-block mb-2"
-                    to="/dashboard"
-                >
-                    Dashboard
-                </Link>
+                    {menuItems.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) =>
+                                `text-decoration-none rounded px-3 py-2 ${
+                                    isActive
+                                        ? "bg-primary text-white"
+                                        : "text-dark"
+                                }`
+                            }
+                        >
+                            {item.label}
+                        </NavLink>
+                    ))}
 
-                <Link
-                    className="d-block mb-2"
-                    to="/houses"
-                >
-                    Houses
-                </Link>
-
-                <Link
-                    className="d-block mb-2"
-                    to="/residents"
-                >
-                    Residents
-                </Link>
-
-                <Link
-                    className="d-block mb-2"
-                    to="/payments"
-                >
-                    Payments
-                </Link>
-
-                <Link
-                    className="d-block mb-2"
-                    to="/expenses"
-                >
-                    Expenses
-                </Link>
-
-                <Link
-                    className="d-block mb-2"
-                    to="/reports"
-                >
-                    Reports
-                </Link>
-
-                <Link
-                    className="d-block"
-                    to="/house-residents"
-                >
-                    House Residents
-                </Link>
+                </nav>
 
             </div>
 
-        </div>
-
+        </aside>
     );
-
 }

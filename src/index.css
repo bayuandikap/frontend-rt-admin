@@ -1,0 +1,210 @@
+/* =========================================================
+   RT ADMINISTRATION SYSTEM
+   Phase 6 - Global UX / Visual Polish
+   ========================================================= */
+
+:root {
+    --rt-radius: 10px;
+    --rt-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ---------------------------------------------------------
+   Global
+   --------------------------------------------------------- */
+
+body {
+    margin: 0;
+    min-width: 320px;
+    background: #f5f7fb;
+    color: #1f2937;
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+/* ---------------------------------------------------------
+   Layout
+   --------------------------------------------------------- */
+
+#root {
+    min-height: 100vh;
+}
+
+main {
+    min-width: 0;
+}
+
+/* ---------------------------------------------------------
+   Cards
+   --------------------------------------------------------- */
+
+.card {
+    border-radius: var(--rt-radius);
+    border: 1px solid #e6e9ef;
+    box-shadow: var(--rt-card-shadow);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   Tables
+   --------------------------------------------------------- */
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table-responsive {
+    border-radius: var(--rt-radius);
+}
+
+/* ---------------------------------------------------------
+   Forms
+   --------------------------------------------------------- */
+
+.form-label,
+label {
+    font-weight: 500;
+}
+
+.form-control,
+.form-select {
+    border-radius: 7px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 2px rgba(32, 107, 196, 0.12);
+}
+
+/* ---------------------------------------------------------
+   Buttons
+   --------------------------------------------------------- */
+
+.btn {
+    border-radius: 7px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   Badges
+   --------------------------------------------------------- */
+
+.badge {
+    font-weight: 500;
+}
+
+/* ---------------------------------------------------------
+   Dashboard / Statistics
+   --------------------------------------------------------- */
+
+.dashboard-stat-card {
+    height: 100%;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------------------------------------------------------
+   Empty states
+   --------------------------------------------------------- */
+
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+/* ---------------------------------------------------------
+   Pagination
+   --------------------------------------------------------- */
+
+.card-footer {
+    background: transparent;
+    border-top: 1px solid #e6e9ef;
+}
+
+/* ---------------------------------------------------------
+   Mobile
+   --------------------------------------------------------- */
+
+@media (max-width: 767.98px) {
+
+    .page-header {
+        gap: 12px;
+    }
+
+    .page-header .btn {
+        width: 100%;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table {
+        font-size: 0.875rem;
+    }
+
+    .btn {
+        white-space: nowrap;
+    }
+}
+
+/* ---------------------------------------------------------
+   Accessibility
+   --------------------------------------------------------- */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid #206bc4;
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   Reduced Motion
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+    }
+}

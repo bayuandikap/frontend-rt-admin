@@ -11,190 +11,464 @@ import {
 } from "../../services/residentService";
 
 export default function Residents() {
-
     const [residents, setResidents] = useState([]);
 
     const [search, setSearch] = useState("");
-
-    const [residentStatus, setStatus] = useState("");
+    const [residentStatus, setResidentStatus] = useState("");
 
     const [editing, setEditing] = useState(null);
-
     const [showForm, setShowForm] = useState(false);
 
-    async function loadData() {
-        const res = await getResidents({
-            search,
-            resident_status: status,
-        });
-
-        setResidents(res.data.data);
-    }
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-
         loadData();
+    }, [search, residentStatus]);
 
-    }, [search, status]);
+    async function loadData() {
+        try {
+            setLoading(true);
+            setError("");
+
+            const res = await getResidents({
+                search,
+                resident_status: residentStatus,
+            });
+
+            setResidents(res.data.data || []);
+        } catch (err) {
+            console.error(err);
+
+            setError("Unable to load residents.");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     async function save(data) {
+        try {
+            setError("");
 
-        if (editing) {
+            if (editing) {
+                await updateResident(editing.id, data);
+            } else {
+                await createResident(data);
+            }
 
-            await updateResident(editing.id, data);
+            setEditing(null);
+            setShowForm(false);
 
-        } else {
+            await loadData();
+        } catch (err) {
+            console.error(err);
 
-            await createResident(data);
-
+            setError("Unable to save resident.");
         }
-
-        setEditing(null);
-
-        setShowForm(false);
-
-        loadData();
-
     }
 
     async function remove(id) {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this resident?"
+        );
 
-        if (!window.confirm("Delete this resident?"))
+        if (!confirmed) {
             return;
+        }
 
-        await deleteResident(id);
+        try {
+            setError("");
 
-        loadData();
+            await deleteResident(id);
 
+            await loadData();
+        } catch (err) {
+            console.error(err);
+
+            setError("Unable to delete resident.");
+        }
+    }
+
+    function openCreateForm() {
+        setEditing(null);
+        setShowForm(true);
+    }
+
+    function openEditForm(resident) {
+        setEditing(resident);
+        setShowForm(true);
+    }
+
+    function closeForm() {
+        setEditing(null);
+        setShowForm(false);
     }
 
     return (
-
         <MainLayout>
 
-            <div className="d-flex justify-content-between mb-3">
+            {/* Page Header */}
+            <div className="d-flex justify-content-between align-items-start mb-4">
 
-                <h2>Residents</h2>
+                <div>
+                    <h2 className="mb-1">
+                        Residents
+                    </h2>
+
+                    <p className="text-muted mb-0">
+                        Manage registered residents in your neighborhood.
+                    </p>
+                </div>
 
                 <button
                     className="btn btn-primary"
-                    onClick={() => {
-
-                        setEditing(null);
-
-                        setShowForm(true);
-
-                    }}
+                    onClick={openCreateForm}
                 >
                     + Add Resident
                 </button>
 
             </div>
 
+            {/* Error */}
+            {error && (
+                <div
+                    className="alert alert-danger d-flex justify-content-between align-items-center"
+                    role="alert"
+                >
+                    <span>{error}</span>
 
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={loadData}
+                    >
+                        Try Again
+                    </button>
+                </div>
+            )}
+
+            {/* Form */}
             {showForm && (
-
                 <ResidentForm
                     resident={editing}
                     onSubmit={save}
-                    onClose={() =>
-                        setShowForm(false)
-                    }
+                    onClose={closeForm}
                 />
-
             )}
 
-            <div className="card">
+            {/* Filters */}
+            <div className="card border-0 shadow-sm mb-4">
 
-                <table className="table card-table table-hover">
+                <div className="card-body">
 
-                    <thead>
+                    <div className="row g-3">
 
-                        <tr>
+                        <div className="col-md-8">
 
-                            <th>No</th>
-                            <th>NIK</th>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>Birth Date</th>
-                            <th>Resident Status</th>
-                            <th>Marital Status</th>
-                            <th>KTP</th>
-                            <th width="180">Action</th>
+                            <label
+                                htmlFor="residentSearch"
+                                className="form-label small fw-semibold"
+                            >
+                                Search Residents
+                            </label>
 
-                        </tr>
+                            <input
+                                id="residentSearch"
+                                type="text"
+                                className="form-control"
+                                placeholder="Search by NIK or name..."
+                                value={search}
+                                onChange={(e) =>
+                                    setSearch(e.target.value)
+                                }
+                            />
 
-                    </thead>
+                        </div>
 
-                    <tbody>
-                        {residents.map((resident, index) => (
-                            <tr key={resident.id}>
-                                <td>{index + 1}</td>
+                        <div className="col-md-4">
 
-                                <td>{resident.nik}</td>
+                            <label
+                                htmlFor="residentStatus"
+                                className="form-label small fw-semibold"
+                            >
+                                Resident Status
+                            </label>
 
-                                <td>{resident.name}</td>
+                            <select
+                                id="residentStatus"
+                                className="form-select"
+                                value={residentStatus}
+                                onChange={(e) =>
+                                    setResidentStatus(e.target.value)
+                                }
+                            >
 
-                                <td>{resident.phone || "-"}</td>
+                                <option value="">
+                                    All statuses
+                                </option>
 
-                                <td>{resident.email || "-"}</td>
+                                <option value="permanent">
+                                    Permanent
+                                </option>
 
-                                <td>{resident.birth_date || "-"}</td>
+                                <option value="temporary">
+                                    Temporary
+                                </option>
 
-                                <td>
-                                    <span
-                                        className={`badge ${resident.resident_status === "permanent"
-                                            ? "bg-success"
-                                            : "bg-warning"
-                                            }`}
-                                    >
-                                        {resident.resident_status}
-                                    </span>
-                                </td>
+                            </select>
 
-                                <td>
-                                    {resident.is_married ? "Married" : "Single"}
-                                </td>
+                        </div>
 
-                                <td>
-                                    {resident.ktp_photo ? (
-                                        <a href={resident.ktp_photo} target="_blank" rel="noreferrer">
-                                            View
-                                        </a>
-                                    ) : (
-                                        "-"
-                                    )}
-                                </td>
+                    </div>
 
-                                <td>
-                                    <button
-                                        className="btn btn-warning btn-sm me-2"
-                                        onClick={() => {
-                                            setEditing(resident);
-                                            setShowForm(true);
-                                        }}
-                                    >
-                                        Edit
-                                    </button>
+                </div>
 
-                                    <button
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() => remove(resident.id)}
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+            </div>
+
+            {/* Residents Table */}
+            <div className="card border-0 shadow-sm">
+
+                <div className="card-header bg-white border-bottom py-3">
+
+                    <div className="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <div className="fw-semibold">
+                                Resident List
+                            </div>
+
+                            <div className="text-muted small">
+                                {loading
+                                    ? "Loading residents..."
+                                    : `${residents.length} resident${residents.length !== 1
+                                        ? "s"
+                                        : ""
+                                    } found`
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="table-responsive">
+
+                    <table className="table table-hover align-middle mb-0">
+
+                        <thead className="table-light">
+
+                            <tr>
+
+                                <th className="small text-muted fw-semibold">
+                                    No
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    NIK
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Name
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Phone
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Email
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Birth Date
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Status
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    Marital
+                                </th>
+
+                                <th className="small text-muted fw-semibold">
+                                    KTP
+                                </th>
+
+                                <th
+                                    className="small text-muted fw-semibold text-end"
+                                    style={{ minWidth: "150px" }}
+                                >
+                                    Actions
+                                </th>
+
                             </tr>
-                        ))}
-                    </tbody>
 
-                </table>
+                        </thead>
+
+                        <tbody>
+
+                            {loading ? (
+                                <tr>
+
+                                    <td
+                                        colSpan="10"
+                                        className="text-center py-5"
+                                    >
+
+                                        <div
+                                            className="spinner-border spinner-border-sm text-primary me-2"
+                                            role="status"
+                                        >
+                                            <span className="visually-hidden">
+                                                Loading...
+                                            </span>
+                                        </div>
+
+                                        <span className="text-muted">
+                                            Loading residents...
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+                            ) : residents.length === 0 ? (
+                                <tr>
+
+                                    <td
+                                        colSpan="10"
+                                        className="text-center py-5"
+                                    >
+
+                                        <div className="fw-semibold mb-1">
+                                            No residents found
+                                        </div>
+
+                                        <div className="text-muted small">
+                                            Try changing your search or
+                                            filter.
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+                            ) : (
+                                residents.map((resident, index) => (
+                                    <tr key={resident.id}>
+
+                                        <td className="text-muted">
+                                            {index + 1}
+                                        </td>
+
+                                        <td className="text-nowrap">
+                                            {resident.nik}
+                                        </td>
+
+                                        <td>
+                                            <div className="fw-semibold">
+                                                {resident.name}
+                                            </div>
+                                        </td>
+
+                                        <td className="text-nowrap">
+                                            {resident.phone || "-"}
+                                        </td>
+
+                                        <td>
+                                            {resident.email || "-"}
+                                        </td>
+
+                                        <td className="text-nowrap">
+                                            {resident.birth_date || "-"}
+                                        </td>
+
+                                        <td>
+                                            <StatusBadge
+                                                status={
+                                                    resident.resident_status
+                                                }
+                                            />
+                                        </td>
+
+                                        <td>
+                                            {resident.is_married
+                                                ? "Married"
+                                                : "Single"
+                                            }
+                                        </td>
+
+                                        <td>
+                                            {resident.ktp_photo ? (
+                                                <a
+                                                    href={resident.ktp_photo}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                >
+                                                    View
+                                                </a>
+                                            ) : (
+                                                <span className="text-muted">
+                                                    -
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        <td className="text-end text-nowrap">
+
+                                            <button
+                                                className="btn btn-sm btn-outline-primary me-2"
+                                                onClick={() =>
+                                                    openEditForm(resident)
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() =>
+                                                    remove(resident.id)
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+                                ))
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 
         </MainLayout>
-
     );
+}
 
+function StatusBadge({ status }) {
+    const normalizedStatus = status?.toLowerCase();
+
+    let className = "bg-secondary";
+
+    if (normalizedStatus === "permanent") {
+        className = "bg-success";
+    }
+
+    if (normalizedStatus === "temporary") {
+        className = "bg-warning text-dark";
+    }
+
+    return (
+        <span className={`badge ${className}`}>
+            {status || "Unknown"}
+        </span>
+    );
 }
