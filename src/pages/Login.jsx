@@ -4,13 +4,42 @@ import Swal from "sweetalert2";
 
 import { login } from "../services/authService";
 
+const DEMO_EMAIL = "admin@example.com";
+const DEMO_PASSWORD = "password123";
+
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const [loading, setLoading] = useState(false);
+    const [demoLoading, setDemoLoading] = useState(false);
 
     const navigate = useNavigate();
+
+    async function performLogin(loginEmail, loginPassword) {
+        try {
+            const data = await login(
+                loginEmail.trim(),
+                loginPassword
+            );
+
+            localStorage.setItem("token", data.token);
+
+            navigate("/dashboard");
+
+        } catch (error) {
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Login failed",
+                text:
+                    error.response?.data?.message ||
+                    "Unable to login. Please check your credentials.",
+            });
+
+        }
+    }
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -28,33 +57,28 @@ export default function Login() {
         try {
             setLoading(true);
 
-            const data = await login(
-                email.trim(),
-                password
-            );
-
-            localStorage.setItem(
-                "token",
-                data.token
-            );
-
-            navigate("/dashboard");
-
-        } catch (error) {
-            console.error(error);
-
-            Swal.fire({
-                icon: "error",
-                title: "Login failed",
-                text:
-                    error.response?.data?.message ||
-                    "Unable to login. Please check your credentials.",
-            });
+            await performLogin(email, password);
 
         } finally {
             setLoading(false);
         }
     }
+
+    async function handleDemoLogin() {
+        try {
+            setDemoLoading(true);
+
+            await performLogin(
+                DEMO_EMAIL,
+                DEMO_PASSWORD
+            );
+
+        } finally {
+            setDemoLoading(false);
+        }
+    }
+
+    const isLoading = loading || demoLoading;
 
     return (
         <div className="container mt-5">
@@ -100,7 +124,7 @@ export default function Login() {
                                     onChange={(e) =>
                                         setEmail(e.target.value)
                                     }
-                                    disabled={loading}
+                                    disabled={isLoading}
                                     autoComplete="email"
                                     required
                                 />
@@ -125,7 +149,7 @@ export default function Login() {
                                     onChange={(e) =>
                                         setPassword(e.target.value)
                                     }
-                                    disabled={loading}
+                                    disabled={isLoading}
                                     autoComplete="current-password"
                                     required
                                 />
@@ -135,9 +159,8 @@ export default function Login() {
                             <button
                                 type="submit"
                                 className="btn btn-primary w-100"
-                                disabled={loading}
+                                disabled={isLoading}
                             >
-
                                 {loading ? (
                                     <>
                                         <span
@@ -151,10 +174,50 @@ export default function Login() {
                                 ) : (
                                     "Sign In"
                                 )}
-
                             </button>
 
                         </form>
+
+                        <div className="d-flex align-items-center my-4">
+
+                            <div className="flex-grow-1 border-top" />
+
+                            <span className="px-3 text-muted small">
+                                OR
+                            </span>
+
+                            <div className="flex-grow-1 border-top" />
+
+                        </div>
+
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary w-100"
+                            onClick={handleDemoLogin}
+                            disabled={isLoading}
+                        >
+                            {demoLoading ? (
+                                <>
+                                    <span
+                                        className="spinner-border spinner-border-sm me-2"
+                                        role="status"
+                                        aria-hidden="true"
+                                    />
+
+                                    Opening Demo...
+                                </>
+                            ) : (
+                                "Use Demo Account"
+                            )}
+                        </button>
+
+                        <div className="text-center mt-3">
+
+                            <small className="text-muted">
+                                Explore the system using a demo account.
+                            </small>
+
+                        </div>
 
                     </div>
 
