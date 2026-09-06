@@ -1,3 +1,4 @@
+import StatusBadge from "../../components/common/StatusBadge";
 import { useEffect, useState } from "react";
 
 import MainLayout from "../../components/layout/MainLayout";
@@ -271,9 +272,9 @@ export default function Reports() {
                                                         Number(
                                                             item.month
                                                         ) ===
-                                                        Number(
-                                                            report.selected_month
-                                                        )
+                                                            Number(
+                                                                report.selected_month
+                                                            )
                                                             ? "table-active"
                                                             : ""
                                                     }
@@ -322,7 +323,7 @@ export default function Reports() {
                         </div>
 
                         {paymentDetails.length ===
-                        0 ? (
+                            0 ? (
                             <EmptyState message="No payment data for the selected month." />
                         ) : (
                             <div className="table-responsive">
@@ -394,18 +395,9 @@ export default function Reports() {
                                                     </td>
 
                                                     <td>
-                                                        <span
-                                                            className={`badge ${
-                                                                payment.status ===
-                                                                "paid"
-                                                                    ? "bg-success"
-                                                                    : "bg-warning text-dark"
-                                                            }`}
-                                                        >
-                                                            {
-                                                                payment.status
-                                                            }
-                                                        </span>
+                                                        {
+                                                            <StatusBadge status={payment.status} />
+                                                        }
                                                     </td>
 
                                                     <td>
@@ -435,7 +427,7 @@ export default function Reports() {
                         </div>
 
                         {expenseDetails.length ===
-                        0 ? (
+                            0 ? (
                             <EmptyState message="No expense data for the selected month." />
                         ) : (
                             <div className="table-responsive">
