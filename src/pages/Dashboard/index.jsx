@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import ReactApexChart from "react-apexcharts";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import MainLayout from "../../components/layout/MainLayout";
 import { getDashboard } from "../../services/dashboardService";
+
+const ApexChart = lazy(() => import("react-apexcharts"));
 
 export default function Dashboard() {
     const [dashboard, setDashboard] = useState(null);
@@ -23,7 +24,11 @@ export default function Dashboard() {
             setDashboard(res.data);
         } catch (err) {
             console.error(err);
-            setError("Unable to load dashboard data.");
+
+            setError(
+                err.response?.data?.message ||
+                "Unable to load dashboard data."
+            );
         } finally {
             setLoading(false);
         }
@@ -55,15 +60,19 @@ export default function Dashboard() {
     if (error) {
         return (
             <MainLayout>
-                <div className="alert alert-danger">
-                    <strong>Something went wrong.</strong>
+                <div className="alert alert-danger d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>
+                            Something went wrong.
+                        </strong>
 
-                    <div className="mt-1">
-                        {error}
+                        <span className="ms-3">
+                            {error}
+                        </span>
                     </div>
 
                     <button
-                        className="btn btn-outline-danger btn-sm mt-3"
+                        className="btn btn-outline-danger btn-sm"
                         onClick={loadDashboard}
                     >
                         Try Again
@@ -83,125 +92,32 @@ export default function Dashboard() {
         );
     }
 
+    const finance = dashboard.finance ?? {};
+    const houses = dashboard.houses ?? {};
+    const residents = dashboard.residents ?? {};
+
     const chartData = (dashboard.chart ?? []).map((item) => ({
         month: item.month,
         income: Number(item.income) || 0,
         expense: Number(item.expense) || 0,
         balance:
+            Number(item.balance) ||
             (Number(item.income) || 0) -
             (Number(item.expense) || 0),
     }));
 
-    const chartOptions = {
-        chart: {
-            toolbar: {
-                show: false,
-            },
-            fontFamily: "inherit",
-        },
-
-        colors: [
-            "#0d6efd",
-            "#dc3545",
-            "#198754",
-        ],
-
-        stroke: {
-            curve: "smooth",
-            width: 3,
-        },
-
-        markers: {
-            size: 0,
-
-            hover: {
-                size: 5,
-            },
-        },
-
-        grid: {
-            borderColor: "#e9ecef",
-        },
-
-        xaxis: {
-            categories: chartData.map(
-                (item) => item.month
-            ),
-
-            labels: {
-                style: {
-                    colors: "#6c757d",
-                },
-            },
-        },
-
-        yaxis: {
-            labels: {
-                formatter: (value) =>
-                    formatCompactMoney(value),
-
-                style: {
-                    colors: "#6c757d",
-                },
-            },
-        },
-
-        tooltip: {
-            shared: true,
-            intersect: false,
-
-            y: {
-                formatter: (value) =>
-                    money(value),
-            },
-        },
-
-        legend: {
-            position: "bottom",
-            horizontalAlign: "center",
-        },
-
-        dataLabels: {
-            enabled: false,
-        },
-    };
-
-    const chartSeries = [
-        {
-            name: "Income",
-            data: chartData.map(
-                (item) => item.income
-            ),
-        },
-
-        {
-            name: "Expense",
-            data: chartData.map(
-                (item) => item.expense
-            ),
-        },
-
-        {
-            name: "Balance",
-            data: chartData.map(
-                (item) => item.balance
-            ),
-        },
-    ];
+    const occupancy = occupancyRate(
+        houses.occupied,
+        houses.total
+    );
 
     const balanceIsPositive =
-        Number(dashboard.finance.balance) >= 0;
-
-    const occupancy =
-        occupancyRate(
-            dashboard.houses.occupied,
-            dashboard.houses.total
-        );
+        Number(finance.balance) >= 0;
 
     return (
         <MainLayout>
 
-            {/* Page Header */}
+            {/* Header */}
 
             <div className="d-flex justify-content-between align-items-center mb-4">
 
@@ -215,39 +131,44 @@ export default function Dashboard() {
                     </p>
                 </div>
 
+                <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={loadDashboard}
+                >
+                    Refresh
+                </button>
+
             </div>
 
 
             {/* Property Overview */}
 
             <div className="mb-2">
-
                 <h6 className="text-uppercase text-muted fw-semibold">
                     Property Overview
                 </h6>
-
             </div>
 
             <div className="row">
 
                 <Card
                     title="Total Houses"
-                    value={dashboard.houses.total}
-                    subtitle={`${dashboard.houses.occupied} occupied`}
+                    value={houses.total ?? 0}
+                    subtitle={`${houses.occupied ?? 0} occupied`}
                 />
 
                 <Card
                     title="Occupied Houses"
-                    value={dashboard.houses.occupied}
+                    value={houses.occupied ?? 0}
                     subtitle={`${occupancy}% occupancy`}
                 />
 
                 <Card
                     title="Vacant Houses"
-                    value={dashboard.houses.vacant}
+                    value={houses.vacant ?? 0}
                     subtitle="Available houses"
                     valueClass={
-                        dashboard.houses.vacant > 0
+                        houses.vacant > 0
                             ? "text-warning"
                             : "text-success"
                     }
@@ -255,8 +176,8 @@ export default function Dashboard() {
 
                 <Card
                     title="Residents"
-                    value={dashboard.residents.total}
-                    subtitle={`${dashboard.residents.active} active residents`}
+                    value={residents.total ?? 0}
+                    subtitle={`${residents.active ?? 0} active residents`}
                 />
 
             </div>
@@ -265,38 +186,30 @@ export default function Dashboard() {
             {/* Financial Overview */}
 
             <div className="mt-3 mb-2">
-
                 <h6 className="text-uppercase text-muted fw-semibold">
                     Financial Overview
                 </h6>
-
             </div>
 
             <div className="row">
 
                 <Card
                     title="Total Income"
-                    value={money(
-                        dashboard.finance.total_income
-                    )}
+                    value={money(finance.total_income)}
                     subtitle="Recorded payments"
                     columnClass="col-lg-4 col-md-6"
                 />
 
                 <Card
                     title="Total Expenses"
-                    value={money(
-                        dashboard.finance.total_expense
-                    )}
+                    value={money(finance.total_expense)}
                     subtitle="Recorded expenses"
                     columnClass="col-lg-4 col-md-6"
                 />
 
                 <Card
                     title="Current Balance"
-                    value={money(
-                        dashboard.finance.balance
-                    )}
+                    value={money(finance.balance)}
                     subtitle={
                         balanceIsPositive
                             ? "Positive balance"
@@ -331,12 +244,15 @@ export default function Dashboard() {
 
                 <div className="card-body">
 
-                    <ReactApexChart
-                        options={chartOptions}
-                        series={chartSeries}
-                        type="line"
-                        height={350}
-                    />
+                    {chartData.length > 0 ? (
+                        <FinancialChart
+                            data={chartData}
+                        />
+                    ) : (
+                        <div className="text-center text-muted py-5">
+                            No financial data available yet.
+                        </div>
+                    )}
 
                 </div>
 
@@ -363,12 +279,12 @@ export default function Dashboard() {
 
                     <div
                         className={
-                            dashboard.finance.unpaid_bills > 0
+                            Number(finance.unpaid_bills) > 0
                                 ? "text-danger fs-4 fw-semibold"
                                 : "text-success fs-4 fw-semibold"
                         }
                     >
-                        {dashboard.finance.unpaid_bills}
+                        {finance.unpaid_bills ?? 0}
                     </div>
 
                 </div>
@@ -380,7 +296,7 @@ export default function Dashboard() {
 
             <div className="row mt-4">
 
-                {/* Latest Payments */}
+                {/* Payments */}
 
                 <div className="col-lg-6 mb-4">
 
@@ -422,11 +338,9 @@ export default function Dashboard() {
                                 </td>
 
                                 <td>
-
                                     <PaymentStatus
                                         status={item.status}
                                     />
-
                                 </td>
 
                             </tr>
@@ -436,7 +350,7 @@ export default function Dashboard() {
                 </div>
 
 
-                {/* Latest Expenses */}
+                {/* Expenses */}
 
                 <div className="col-lg-6 mb-4">
 
@@ -455,6 +369,7 @@ export default function Dashboard() {
                             <tr key={item.id}>
 
                                 <td>
+
                                     <div className="fw-medium">
                                         {item.title}
                                     </div>
@@ -469,6 +384,7 @@ export default function Dashboard() {
                                             {item.description}
                                         </div>
                                     )}
+
                                 </td>
 
                                 <td className="text-nowrap">
@@ -493,6 +409,167 @@ export default function Dashboard() {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| ApexCharts
+|--------------------------------------------------------------------------
+*/
+
+function FinancialChart({ data }) {
+
+    const categories = data.map(
+        (item) => item.month
+    );
+
+    const series = [
+        {
+            name: "Income",
+            data: data.map(
+                (item) => item.income
+            ),
+        },
+        {
+            name: "Expense",
+            data: data.map(
+                (item) => item.expense
+            ),
+        },
+        {
+            name: "Balance",
+            data: data.map(
+                (item) => item.balance
+            ),
+        },
+    ];
+
+    const options = {
+
+        chart: {
+            type: "line",
+
+            toolbar: {
+                show: false,
+            },
+
+            zoom: {
+                enabled: false,
+            },
+        },
+
+        stroke: {
+            curve: "smooth",
+            width: 3,
+        },
+
+        markers: {
+            size: 4,
+
+            hover: {
+                size: 6,
+            },
+        },
+
+        dataLabels: {
+            enabled: false,
+        },
+
+        xaxis: {
+            categories,
+
+            labels: {
+                style: {
+                    colors: "#6c757d",
+                },
+            },
+        },
+
+        yaxis: {
+
+            labels: {
+
+                formatter: (value) =>
+                    formatCompactMoney(value),
+
+                style: {
+                    colors: "#6c757d",
+                },
+
+            },
+
+        },
+
+        tooltip: {
+
+            y: {
+
+                formatter: (value) =>
+                    money(value),
+
+            },
+
+        },
+
+        legend: {
+            position: "top",
+            horizontalAlign: "center",
+        },
+
+        grid: {
+            borderColor: "#e9ecef",
+            strokeDashArray: 4,
+        },
+
+        colors: [
+            "#0d6efd",
+            "#dc3545",
+            "#198754",
+        ],
+
+        responsive: [
+            {
+                breakpoint: 768,
+
+                options: {
+                    chart: {
+                        height: 300,
+                    },
+
+                    legend: {
+                        position: "bottom",
+                    },
+                },
+            },
+        ],
+    };
+
+    return (
+        <Suspense
+            fallback={
+                <div className="text-center py-5 text-muted">
+                    Loading chart...
+                </div>
+            }
+        >
+
+            <ApexChart
+                options={options}
+                series={series}
+                type="line"
+                height={360}
+                width="100%"
+            />
+
+        </Suspense>
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Cards
+|--------------------------------------------------------------------------
+*/
 
 function Card({
     title,
@@ -530,6 +607,12 @@ function Card({
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Activity Table
+|--------------------------------------------------------------------------
+*/
 
 function ActivityTable({
     title,
@@ -598,8 +681,16 @@ function ActivityTable({
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Payment Status
+|--------------------------------------------------------------------------
+*/
+
 function PaymentStatus({ status }) {
-    const isPaid = status === "paid";
+
+    const isPaid =
+        status === "paid";
 
     return (
         <span
@@ -608,13 +699,22 @@ function PaymentStatus({ status }) {
                     : "bg-danger"
                 }`}
         >
-            {isPaid ? "Paid" : "Unpaid"}
+            {isPaid
+                ? "Paid"
+                : "Unpaid"}
         </span>
     );
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Formatting
+|--------------------------------------------------------------------------
+*/
+
 function money(value) {
+
     return new Intl.NumberFormat(
         "id-ID",
         {
@@ -622,33 +722,53 @@ function money(value) {
             currency: "IDR",
             maximumFractionDigits: 0,
         }
-    ).format(Number(value) || 0);
+    ).format(
+        Number(value) || 0
+    );
 }
 
 
 function formatCompactMoney(value) {
-    const number = Number(value) || 0;
 
-    if (Math.abs(number) >= 1000000) {
-        return `Rp ${(number / 1000000).toFixed(1)} jt`;
+    const number =
+        Number(value) || 0;
+
+    if (
+        Math.abs(number) >=
+        1000000
+    ) {
+        return `Rp ${(
+            number / 1000000
+        ).toFixed(1)} jt`;
     }
 
-    if (Math.abs(number) >= 1000) {
-        return `Rp ${(number / 1000).toFixed(0)} rb`;
+    if (
+        Math.abs(number) >=
+        1000
+    ) {
+        return `Rp ${(
+            number / 1000
+        ).toFixed(0)} rb`;
     }
 
-    return `Rp ${number}`;
+    return `Rp ${Math.round(number)}`;
 }
 
 
 function formatDate(value) {
+
     if (!value) {
         return "-";
     }
 
-    const date = new Date(value);
+    const date =
+        new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
         return value;
     }
 
@@ -663,12 +783,18 @@ function formatDate(value) {
 }
 
 
-function occupancyRate(occupied, total) {
+function occupancyRate(
+    occupied,
+    total
+) {
+
     if (!total) {
         return 0;
     }
 
     return Math.round(
-        (Number(occupied) / Number(total)) * 100
+        (Number(occupied) /
+            Number(total)) *
+        100
     );
 }
