@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
 import MainLayout from "../../components/layout/MainLayout";
+import Loading from "../../components/common/Loading";
+import ErrorAlert from "../../components/common/ErrorAlert";
+import EmptyState from "../../components/common/EmptyState";
+import ConfirmButton from "../../components/common/ConfirmButton";
+
 import ExpenseForm from "./ExpenseForm";
 
 import {
@@ -10,326 +15,244 @@ import {
     deleteExpense,
 } from "../../services/expenseService";
 
+import {
+    formatCurrency,
+    formatDate,
+} from "../../utils/format";
+
 export default function Expenses() {
-
     const [expenses, setExpenses] = useState([]);
-
-    const [search, setSearch] = useState("");
-
-    const [month, setMonth] = useState("");
-
-    const [year, setYear] = useState(new Date().getFullYear());
 
     const [editing, setEditing] = useState(null);
 
     const [showForm, setShowForm] = useState(false);
 
+    const [loading, setLoading] = useState(true);
+
+    const [error, setError] = useState("");
+
     async function loadData() {
-
         try {
+            setLoading(true);
+            setError("");
 
-            const res = await getExpenses({
-                search,
-                month,
-                year,
-            });
+            const response = await getExpenses();
 
-            setExpenses(res.data.data);
-
+            setExpenses(
+                response.data.data || []
+            );
         } catch (err) {
-
             console.error(err);
 
+            setError(
+                err.response?.data?.message ||
+                "Unable to load expenses."
+            );
+        } finally {
+            setLoading(false);
         }
-
     }
 
     useEffect(() => {
-
         loadData();
-
-    }, [search, month, year]);
+    }, []);
 
     async function save(data) {
-
         try {
-
             if (editing) {
-
-                await updateExpense(editing.id, data);
-
+                await updateExpense(
+                    editing.id,
+                    data
+                );
             } else {
-
                 await createExpense(data);
-
             }
 
             setEditing(null);
-
             setShowForm(false);
 
-            loadData();
-
+            await loadData();
         } catch (err) {
-
             console.error(err);
 
-            if (err.response?.data?.errors) {
+            const errors =
+                err.response?.data?.errors;
 
-                alert(JSON.stringify(err.response.data.errors));
-
+            if (errors) {
+                alert(
+                    Object.values(errors)
+                        .flat()
+                        .join("\n")
+                );
+            } else {
+                alert(
+                    err.response?.data?.message ||
+                    "Unable to save expense."
+                );
             }
-
         }
-
     }
 
     async function remove(id) {
-
-        if (!window.confirm("Delete this expense?"))
-            return;
-
         try {
-
             await deleteExpense(id);
-
-            loadData();
-
+            await loadData();
         } catch (err) {
-
             console.error(err);
 
+            alert(
+                err.response?.data?.message ||
+                "Unable to delete expense."
+            );
         }
-
     }
 
     return (
-
         <MainLayout>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 className="mb-1">
+                        Expenses
+                    </h2>
 
-            <div className="d-flex justify-content-between mb-3">
-
-                <h2>Expenses</h2>
+                    <p className="text-muted mb-0">
+                        Manage RT operational expenses.
+                    </p>
+                </div>
 
                 <button
+                    type="button"
                     className="btn btn-primary"
                     onClick={() => {
-
                         setEditing(null);
-
                         setShowForm(true);
-
                     }}
                 >
-
                     + New Expense
-
                 </button>
-
-            </div>
-
-            <div className="row mb-3">
-
-                <div className="col-md-5">
-
-                    <input
-                        className="form-control"
-                        placeholder="Search title..."
-                        value={search}
-                        onChange={(e)=>setSearch(e.target.value)}
-                    />
-
-                </div>
-
-                <div className="col-md-3">
-
-                    <select
-                        className="form-select"
-                        value={month}
-                        onChange={(e)=>setMonth(e.target.value)}
-                    >
-
-                        <option value="">
-                            All Month
-                        </option>
-
-                        {Array.from({length:12}).map((_,i)=>(
-
-                            <option
-                                key={i+1}
-                                value={i+1}
-                            >
-                                {i+1}
-                            </option>
-
-                        ))}
-
-                    </select>
-
-                </div>
-
-                <div className="col-md-2">
-
-                    <input
-                        type="number"
-                        className="form-control"
-                        value={year}
-                        onChange={(e)=>setYear(e.target.value)}
-                    />
-
-                </div>
-
             </div>
 
             {showForm && (
-
                 <ExpenseForm
                     expense={editing}
                     onSubmit={save}
                     onClose={() => {
-
                         setEditing(null);
-
                         setShowForm(false);
-
                     }}
                 />
-
             )}
 
-            <div className="card">
-
-                <div className="table-responsive">
-
-                    <table className="table card-table table-hover">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>No</th>
-
-                                <th>Title</th>
-
-                                <th>Date</th>
-
-                                <th>Amount</th>
-
-                                <th>Description</th>
-
-                                <th width="180">
-
-                                    Action
-
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {expenses.length === 0 && (
-
-                                <tr>
-
-                                    <td
-                                        colSpan="6"
-                                        className="text-center"
-                                    >
-
-                                        No expense data
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                            {expenses.map((expense,index)=>(
-
-                                <tr key={expense.id}>
-
-                                    <td>
-
-                                        {index+1}
-
-                                    </td>
-
-                                    <td>
-
-                                        {expense.title}
-
-                                    </td>
-
-                                    <td>
-
-                                        {expense.expense_date}
-
-                                    </td>
-
-                                    <td>
-
-                                        {new Intl.NumberFormat(
-                                            "id-ID",
-                                            {
-                                                style:"currency",
-                                                currency:"IDR"
-                                            }
-                                        ).format(expense.amount)}
-
-                                    </td>
-
-                                    <td>
-
-                                        {expense.description || "-"}
-
-                                    </td>
-
-                                    <td>
-
-                                        <button
-                                            className="btn btn-warning btn-sm me-2"
-                                            onClick={()=>{
-
-                                                setEditing(expense);
-
-                                                setShowForm(true);
-
-                                            }}
-                                        >
-
-                                            Edit
-
-                                        </button>
-
-                                        <button
-                                            className="btn btn-danger btn-sm"
-                                            onClick={()=>
-                                                remove(expense.id)
-                                            }
-                                        >
-
-                                            Delete
-
-                                        </button>
-
-                                    </td>
-
-                                </tr>
-
-                            ))}
-
-                        </tbody>
-
-                    </table>
-
+            {loading ? (
+                <div className="card">
+                    <Loading message="Loading expenses..." />
                 </div>
+            ) : error ? (
+                <ErrorAlert
+                    message={error}
+                    onRetry={loadData}
+                />
+            ) : (
+                <div className="card">
+                    {expenses.length === 0 ? (
+                        <EmptyState message="No expense records found." />
+                    ) : (
+                        <div className="table-responsive">
+                            <table className="table card-table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Title</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
 
-            </div>
+                                <tbody>
+                                    {expenses.map(
+                                        (
+                                            expense,
+                                            index
+                                        ) => (
+                                            <tr
+                                                key={
+                                                    expense.id
+                                                }
+                                            >
+                                                <td>
+                                                    {index +
+                                                        1}
+                                                </td>
 
+                                                <td>
+                                                    <strong>
+                                                        {
+                                                            expense.title
+                                                        }
+                                                    </strong>
+                                                </td>
+
+                                                <td>
+                                                    {formatCurrency(
+                                                        expense.amount
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    {formatDate(
+                                                        expense.expense_date
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    {
+                                                        expense.description ||
+                                                        "-"
+                                                    }
+                                                </td>
+
+                                                <td>
+                                                    <div className="d-flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-warning btn-sm"
+                                                            onClick={() => {
+                                                                setEditing(
+                                                                    expense
+                                                                );
+                                                                setShowForm(
+                                                                    true
+                                                                );
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </button>
+
+                                                        <ConfirmButton
+                                                            message="Delete this expense?"
+                                                            onConfirm={() =>
+                                                                remove(
+                                                                    expense.id
+                                                                )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </ConfirmButton>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
         </MainLayout>
-
     );
-
 }

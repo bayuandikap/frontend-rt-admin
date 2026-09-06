@@ -57,7 +57,10 @@ export default function Dashboard() {
             <MainLayout>
                 <div className="alert alert-danger">
                     <strong>Something went wrong.</strong>
-                    <div className="mt-1">{error}</div>
+
+                    <div className="mt-1">
+                        {error}
+                    </div>
 
                     <button
                         className="btn btn-outline-danger btn-sm mt-3"
@@ -80,85 +83,126 @@ export default function Dashboard() {
         );
     }
 
+    const chartData = (dashboard.chart ?? []).map((item) => ({
+        month: item.month,
+        income: Number(item.income) || 0,
+        expense: Number(item.expense) || 0,
+        balance:
+            (Number(item.income) || 0) -
+            (Number(item.expense) || 0),
+    }));
+
     const chartOptions = {
         chart: {
             toolbar: {
-                show: false
+                show: false,
             },
-            fontFamily: "inherit"
+            fontFamily: "inherit",
         },
 
-        colors: ["#0d6efd", "#20c997"],
+        colors: [
+            "#0d6efd",
+            "#dc3545",
+            "#198754",
+        ],
 
         stroke: {
             curve: "smooth",
-            width: 3
+            width: 3,
         },
 
         markers: {
             size: 0,
+
             hover: {
-                size: 5
-            }
+                size: 5,
+            },
         },
 
         grid: {
-            borderColor: "#e9ecef"
+            borderColor: "#e9ecef",
         },
 
         xaxis: {
-            categories: dashboard.chart.map((item) => item.month),
+            categories: chartData.map(
+                (item) => item.month
+            ),
 
             labels: {
                 style: {
-                    colors: "#6c757d"
-                }
-            }
+                    colors: "#6c757d",
+                },
+            },
         },
 
         yaxis: {
             labels: {
-                formatter: (value) => formatCompactMoney(value),
+                formatter: (value) =>
+                    formatCompactMoney(value),
 
                 style: {
-                    colors: "#6c757d"
-                }
-            }
+                    colors: "#6c757d",
+                },
+            },
         },
 
         tooltip: {
+            shared: true,
+            intersect: false,
+
             y: {
-                formatter: (value) => money(value)
-            }
+                formatter: (value) =>
+                    money(value),
+            },
         },
 
         legend: {
             position: "bottom",
-            horizontalAlign: "center"
+            horizontalAlign: "center",
         },
 
         dataLabels: {
-            enabled: false
-        }
+            enabled: false,
+        },
     };
 
     const chartSeries = [
         {
             name: "Income",
-            data: dashboard.chart.map((item) => item.income)
+            data: chartData.map(
+                (item) => item.income
+            ),
         },
+
         {
             name: "Expense",
-            data: dashboard.chart.map((item) => item.expense)
-        }
+            data: chartData.map(
+                (item) => item.expense
+            ),
+        },
+
+        {
+            name: "Balance",
+            data: chartData.map(
+                (item) => item.balance
+            ),
+        },
     ];
 
-    const balanceIsPositive = dashboard.finance.balance >= 0;
+    const balanceIsPositive =
+        Number(dashboard.finance.balance) >= 0;
+
+    const occupancy =
+        occupancyRate(
+            dashboard.houses.occupied,
+            dashboard.houses.total
+        );
 
     return (
         <MainLayout>
 
             {/* Page Header */}
+
             <div className="d-flex justify-content-between align-items-center mb-4">
 
                 <div>
@@ -173,7 +217,9 @@ export default function Dashboard() {
 
             </div>
 
+
             {/* Property Overview */}
+
             <div className="mb-2">
 
                 <h6 className="text-uppercase text-muted fw-semibold">
@@ -193,36 +239,31 @@ export default function Dashboard() {
                 <Card
                     title="Occupied Houses"
                     value={dashboard.houses.occupied}
-                    subtitle={`${occupancyRate(
-                        dashboard.houses.occupied,
-                        dashboard.houses.total
-                    )}% occupancy`}
+                    subtitle={`${occupancy}% occupancy`}
+                />
+
+                <Card
+                    title="Vacant Houses"
+                    value={dashboard.houses.vacant}
+                    subtitle="Available houses"
+                    valueClass={
+                        dashboard.houses.vacant > 0
+                            ? "text-warning"
+                            : "text-success"
+                    }
                 />
 
                 <Card
                     title="Residents"
                     value={dashboard.residents.total}
-                    subtitle="Registered residents"
-                />
-
-                <Card
-                    title="Unpaid Bills"
-                    value={dashboard.finance.unpaid_bills}
-                    subtitle={
-                        dashboard.finance.unpaid_bills > 0
-                            ? "Requires attention"
-                            : "All bills paid"
-                    }
-                    valueClass={
-                        dashboard.finance.unpaid_bills > 0
-                            ? "text-danger"
-                            : "text-success"
-                    }
+                    subtitle={`${dashboard.residents.active} active residents`}
                 />
 
             </div>
 
+
             {/* Financial Overview */}
+
             <div className="mt-3 mb-2">
 
                 <h6 className="text-uppercase text-muted fw-semibold">
@@ -235,21 +276,27 @@ export default function Dashboard() {
 
                 <Card
                     title="Total Income"
-                    value={money(dashboard.finance.total_income)}
+                    value={money(
+                        dashboard.finance.total_income
+                    )}
                     subtitle="Recorded payments"
                     columnClass="col-lg-4 col-md-6"
                 />
 
                 <Card
                     title="Total Expenses"
-                    value={money(dashboard.finance.total_expense)}
+                    value={money(
+                        dashboard.finance.total_expense
+                    )}
                     subtitle="Recorded expenses"
                     columnClass="col-lg-4 col-md-6"
                 />
 
                 <Card
                     title="Current Balance"
-                    value={money(dashboard.finance.balance)}
+                    value={money(
+                        dashboard.finance.balance
+                    )}
                     subtitle={
                         balanceIsPositive
                             ? "Positive balance"
@@ -265,17 +312,19 @@ export default function Dashboard() {
 
             </div>
 
+
             {/* Financial Chart */}
+
             <div className="card border-0 shadow-sm mt-4">
 
                 <div className="card-header bg-white border-bottom py-3">
 
                     <div className="fw-semibold">
-                        Income vs Expense
+                        Financial Performance
                     </div>
 
                     <div className="text-muted small mt-1">
-                        Monthly financial activity
+                        Monthly income, expenses and balance
                     </div>
 
                 </div>
@@ -286,15 +335,52 @@ export default function Dashboard() {
                         options={chartOptions}
                         series={chartSeries}
                         type="line"
-                        height={320}
+                        height={350}
                     />
 
                 </div>
 
             </div>
 
+
+            {/* Unpaid Bills */}
+
+            <div className="card border-0 shadow-sm mt-4">
+
+                <div className="card-body d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <div className="fw-semibold">
+                            Unpaid Bills
+                        </div>
+
+                        <div className="text-muted small">
+                            Outstanding payment records
+                        </div>
+
+                    </div>
+
+                    <div
+                        className={
+                            dashboard.finance.unpaid_bills > 0
+                                ? "text-danger fs-4 fw-semibold"
+                                : "text-success fs-4 fw-semibold"
+                        }
+                    >
+                        {dashboard.finance.unpaid_bills}
+                    </div>
+
+                </div>
+
+            </div>
+
+
             {/* Latest Activity */}
+
             <div className="row mt-4">
+
+                {/* Latest Payments */}
 
                 <div className="col-lg-6 mb-4">
 
@@ -303,23 +389,44 @@ export default function Dashboard() {
                         headers={[
                             "House",
                             "Type",
-                            "Amount"
+                            "Amount",
+                            "Status",
                         ]}
-                        items={dashboard.latest_payments}
+                        items={
+                            dashboard.latest_payments ?? []
+                        }
                         emptyMessage="No payments recorded yet."
                         renderRow={(item) => (
                             <tr key={item.id}>
 
-                                <td className="fw-medium">
-                                    {item.house.house_number}
+                                <td>
+
+                                    <div className="fw-medium">
+                                        {item.house?.house_number ?? "-"}
+                                    </div>
+
+                                    {item.house?.block && (
+                                        <div className="text-muted small">
+                                            Block {item.house.block}
+                                        </div>
+                                    )}
+
                                 </td>
 
                                 <td>
-                                    {item.payment_type.name}
+                                    {item.payment_type?.name ?? "-"}
                                 </td>
 
                                 <td className="text-nowrap">
                                     {money(item.amount)}
+                                </td>
+
+                                <td>
+
+                                    <PaymentStatus
+                                        status={item.status}
+                                    />
+
                                 </td>
 
                             </tr>
@@ -328,6 +435,9 @@ export default function Dashboard() {
 
                 </div>
 
+
+                {/* Latest Expenses */}
+
                 <div className="col-lg-6 mb-4">
 
                     <ActivityTable
@@ -335,19 +445,36 @@ export default function Dashboard() {
                         headers={[
                             "Title",
                             "Date",
-                            "Amount"
+                            "Amount",
                         ]}
-                        items={dashboard.latest_expenses}
+                        items={
+                            dashboard.latest_expenses ?? []
+                        }
                         emptyMessage="No expenses recorded yet."
                         renderRow={(item) => (
                             <tr key={item.id}>
 
-                                <td className="fw-medium">
-                                    {item.title}
+                                <td>
+                                    <div className="fw-medium">
+                                        {item.title}
+                                    </div>
+
+                                    {item.description && (
+                                        <div
+                                            className="text-muted small text-truncate"
+                                            style={{
+                                                maxWidth: "180px",
+                                            }}
+                                        >
+                                            {item.description}
+                                        </div>
+                                    )}
                                 </td>
 
                                 <td className="text-nowrap">
-                                    {item.expense_date}
+                                    {formatDate(
+                                        item.expense_date
+                                    )}
                                 </td>
 
                                 <td className="text-nowrap">
@@ -366,14 +493,16 @@ export default function Dashboard() {
     );
 }
 
+
 function Card({
     title,
     value,
     subtitle,
-    valueClass = ""
+    valueClass = "",
+    columnClass = "col-lg-3 col-md-6",
 }) {
     return (
-        <div className="col-lg-3 col-md-6 mb-3">
+        <div className={`${columnClass} mb-3`}>
 
             <div className="card border-0 shadow-sm h-100">
 
@@ -383,7 +512,9 @@ function Card({
                         {title}
                     </div>
 
-                    <div className={`fs-4 fw-semibold ${valueClass}`}>
+                    <div
+                        className={`fs-4 fw-semibold ${valueClass}`}
+                    >
                         {value}
                     </div>
 
@@ -399,12 +530,13 @@ function Card({
     );
 }
 
+
 function ActivityTable({
     title,
     headers,
     items,
     renderRow,
-    emptyMessage
+    emptyMessage,
 }) {
     return (
         <div className="card border-0 shadow-sm h-100">
@@ -424,6 +556,7 @@ function ActivityTable({
                     <thead className="table-light">
 
                         <tr>
+
                             {headers.map((header) => (
                                 <th
                                     key={header}
@@ -432,6 +565,7 @@ function ActivityTable({
                                     {header}
                                 </th>
                             ))}
+
                         </tr>
 
                     </thead>
@@ -463,33 +597,78 @@ function ActivityTable({
     );
 }
 
+
+function PaymentStatus({ status }) {
+    const isPaid = status === "paid";
+
+    return (
+        <span
+            className={`badge ${isPaid
+                    ? "bg-success"
+                    : "bg-danger"
+                }`}
+        >
+            {isPaid ? "Paid" : "Unpaid"}
+        </span>
+    );
+}
+
+
 function money(value) {
     return new Intl.NumberFormat(
         "id-ID",
         {
             style: "currency",
             currency: "IDR",
-            maximumFractionDigits: 0
+            maximumFractionDigits: 0,
         }
-    ).format(value);
+    ).format(Number(value) || 0);
 }
+
 
 function formatCompactMoney(value) {
-    if (Math.abs(value) >= 1000000) {
-        return `Rp ${(value / 1000000).toFixed(1)} jt`;
+    const number = Number(value) || 0;
+
+    if (Math.abs(number) >= 1000000) {
+        return `Rp ${(number / 1000000).toFixed(1)} jt`;
     }
 
-    if (Math.abs(value) >= 1000) {
-        return `Rp ${(value / 1000).toFixed(0)} rb`;
+    if (Math.abs(number) >= 1000) {
+        return `Rp ${(number / 1000).toFixed(0)} rb`;
     }
 
-    return `Rp ${value}`;
+    return `Rp ${number}`;
 }
+
+
+function formatDate(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat(
+        "id-ID",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        }
+    ).format(date);
+}
+
 
 function occupancyRate(occupied, total) {
     if (!total) {
         return 0;
     }
 
-    return Math.round((occupied / total) * 100);
+    return Math.round(
+        (Number(occupied) / Number(total)) * 100
+    );
 }
