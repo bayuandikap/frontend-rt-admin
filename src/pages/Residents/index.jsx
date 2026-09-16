@@ -319,7 +319,7 @@ export default function Residents() {
                                             type="button"
                                             className="btn btn-sm btn-outline-primary"
                                             onClick={() =>
-                                                handleEdit(resident)
+                                                openEditForm(resident)
                                             }
                                         >
                                             Edit
@@ -329,7 +329,7 @@ export default function Residents() {
                                             type="button"
                                             className="btn btn-sm btn-outline-danger"
                                             onClick={() =>
-                                                handleDelete(resident.id)
+                                                remove(resident.id)
                                             }
                                         >
                                             Delete

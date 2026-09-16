@@ -15,7 +15,22 @@ export function createResident(data) {
 }
 
 export function updateResident(id, data) {
-    return api.put(`/residents/${id}`, data);
+
+    // Laravel/PHP handles multipart file uploads
+    // more reliably through POST + method spoofing.
+    if (data instanceof FormData) {
+        data.append("_method", "PUT");
+
+        return api.post(
+            `/residents/${id}`,
+            data
+        );
+    }
+
+    return api.put(
+        `/residents/${id}`,
+        data
+    );
 }
 
 export function deleteResident(id) {
