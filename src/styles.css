@@ -539,3 +539,19 @@ body,
     background-color: #f8f9fa;
     border-color: #dee2e6;
 }
+
+/* Occupied */
+
+.status-badge-occupied {
+    color: #0a3622;
+    background-color: #d1e7dd;
+    border-color: #a3cfbb;
+}
+
+/* Vacant */
+
+.status-badge-vacant {
+    color: #664d03;
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+}

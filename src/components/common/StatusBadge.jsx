@@ -83,6 +83,16 @@ export default function StatusBadge({ status }) {
             label: "Moved Out",
             className: "status-badge-moved-out",
         },
+
+        occupied: {
+            label: "Occupied",
+            className: "status-badge-occupied",
+        },
+
+        vacant: {
+            label: "Vacant",
+            className: "status-badge-vacant",
+        },
     };
 
     const config = statusConfig[normalizedStatus];

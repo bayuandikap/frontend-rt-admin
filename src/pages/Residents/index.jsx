@@ -315,25 +315,27 @@ export default function Residents() {
                                         data-label="Actions"
                                         className="rt-resident-actions"
                                     >
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-primary"
-                                            onClick={() =>
-                                                openEditForm(resident)
-                                            }
-                                        >
-                                            Edit
-                                        </button>
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-primary"
+                                                onClick={() =>
+                                                    openEditForm(resident)
+                                                }
+                                            >
+                                                Edit
+                                            </button>
 
-                                        <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() =>
-                                                remove(resident.id)
-                                            }
-                                        >
-                                            Delete
-                                        </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() =>
+                                                    remove(resident.id)
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

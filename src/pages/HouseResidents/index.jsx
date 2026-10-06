@@ -6,6 +6,7 @@ import ErrorAlert from "../../components/common/ErrorAlert";
 import EmptyState from "../../components/common/EmptyState";
 import ConfirmButton from "../../components/common/ConfirmButton";
 import StatusBadge from "../../components/common/StatusBadge";
+import Pagination from "../../components/common/Pagination";
 
 import HouseResidentForm from "./HouseResidentForm";
 
@@ -25,15 +26,22 @@ export default function HouseResidents() {
     const [records, setRecords] = useState([]);
 
     const [houses, setHouses] = useState([]);
-
     const [residents, setResidents] = useState([]);
 
-    const [editing, setEditing] = useState(null);
+    const [search, setSearch] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+    const [page, setPage] = useState(1);
 
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0,
+    });
+
+    const [editing, setEditing] = useState(null);
     const [showForm, setShowForm] = useState(false);
 
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
     async function loadData() {
@@ -41,34 +49,25 @@ export default function HouseResidents() {
             setLoading(true);
             setError("");
 
-            const [
-                houseResidentRes,
-                houseRes,
-                residentRes,
-            ] = await Promise.all([
-                getHouseResidents(),
+            const [houseResidentRes, houseRes, residentRes] = await Promise.all([
+                getHouseResidents({ search, is_active: filterStatus, page }),
                 getHouses(),
                 getResidents(),
             ]);
 
-            setRecords(
-                houseResidentRes.data.data || []
-            );
+            setRecords(houseResidentRes.data.data || []);
 
-            setHouses(
-                houseRes.data.data || []
-            );
+            setPagination({
+                current_page: houseResidentRes.data.meta?.current_page || 1,
+                last_page: houseResidentRes.data.meta?.last_page || 1,
+                total: houseResidentRes.data.meta?.total || houseResidentRes.data.data?.length || 0,
+            });
 
-            setResidents(
-                residentRes.data.data || []
-            );
+            setHouses(houseRes.data.data || []);
+            setResidents(residentRes.data.data || []);
         } catch (err) {
             console.error(err);
-
-            setError(
-                err.response?.data?.message ||
-                "Unable to load house residents."
-            );
+            setError(err.response?.data?.message || "Unable to load house residents.");
         } finally {
             setLoading(false);
         }
@@ -76,15 +75,22 @@ export default function HouseResidents() {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [search, filterStatus, page]);
+
+    function handleSearch(value) {
+        setSearch(value);
+        setPage(1);
+    }
+
+    function handleStatus(value) {
+        setFilterStatus(value);
+        setPage(1);
+    }
 
     async function save(data) {
         try {
             if (editing) {
-                await updateHouseResident(
-                    editing.id,
-                    data
-                );
+                await updateHouseResident(editing.id, data);
             } else {
                 await createHouseResident(data);
             }
@@ -96,20 +102,12 @@ export default function HouseResidents() {
         } catch (err) {
             console.error(err);
 
-            const errors =
-                err.response?.data?.errors;
+            const errors = err.response?.data?.errors;
 
             if (errors) {
-                alert(
-                    Object.values(errors)
-                        .flat()
-                        .join("\n")
-                );
+                alert(Object.values(errors).flat().join("\n"));
             } else {
-                alert(
-                    err.response?.data?.message ||
-                    "Unable to save house resident."
-                );
+                alert(err.response?.data?.message || "Unable to save house resident.");
             }
         }
     }
@@ -117,34 +115,33 @@ export default function HouseResidents() {
     async function moveOut(id) {
         try {
             await deleteHouseResident(id);
-            await loadData();
+
+            if (records.length === 1 && page > 1) {
+                setPage((p) => p - 1);
+            } else {
+                await loadData();
+            }
         } catch (err) {
             console.error(err);
-
-            alert(
-                err.response?.data?.message ||
-                "Unable to move resident out."
-            );
+            alert(err.response?.data?.message || "Unable to move resident out.");
         }
     }
 
     return (
         <MainLayout>
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            {/* Page Header */}
+            <div className="d-flex justify-content-between align-items-start mb-4 gap-3">
                 <div>
-                    <h2 className="mb-1">
-                        House Residents
-                    </h2>
+                    <h2 className="mb-1">House Residents</h2>
 
                     <p className="text-muted mb-0">
-                        Manage resident and house
-                        assignments.
+                        Manage resident and house assignments.
                     </p>
                 </div>
 
                 <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-primary flex-shrink-0"
                     onClick={() => {
                         setEditing(null);
                         setShowForm(true);
@@ -154,6 +151,12 @@ export default function HouseResidents() {
                 </button>
             </div>
 
+            {/* Error */}
+            {error && (
+                <ErrorAlert message={error} onRetry={loadData} />
+            )}
+
+            {/* Form */}
             {showForm && (
                 <HouseResidentForm
                     record={editing}
@@ -167,20 +170,70 @@ export default function HouseResidents() {
                 />
             )}
 
-            {loading ? (
-                <div className="card">
-                    <Loading message="Loading house residents..." />
+            {/* Filters */}
+            <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body">
+                    <div className="row g-3">
+                        <div className="col-md-8">
+                            <label
+                                htmlFor="hrSearch"
+                                className="form-label small fw-semibold"
+                            >
+                                Search
+                            </label>
+
+                            <input
+                                id="hrSearch"
+                                type="text"
+                                className="form-control"
+                                placeholder="Search by house number or resident name..."
+                                value={search}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <label
+                                htmlFor="hrStatus"
+                                className="form-label small fw-semibold"
+                            >
+                                Status
+                            </label>
+
+                            <select
+                                id="hrStatus"
+                                className="form-select"
+                                value={filterStatus}
+                                onChange={(e) => handleStatus(e.target.value)}
+                            >
+                                <option value="">All statuses</option>
+                                <option value="1">Active</option>
+                                <option value="0">Moved Out</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            ) : error ? (
-                <ErrorAlert
-                    message={error}
-                    onRetry={loadData}
-                />
-            ) : (
-                <div className="card">
-                    {records.length === 0 ? (
-                        <EmptyState message="No house resident assignments found." />
-                    ) : (
+            </div>
+
+            {/* Table Card */}
+            <div className="card border-0 shadow-sm">
+                {/* Card Header */}
+                <div className="card-header bg-white border-bottom py-3">
+                    <div className="fw-semibold">Assignment List</div>
+
+                    <div className="text-muted small">
+                        {loading
+                            ? "Loading assignments..."
+                            : `${pagination.total} assignment${pagination.total !== 1 ? "s" : ""} found`}
+                    </div>
+                </div>
+
+                {loading ? (
+                    <Loading message="Loading house residents..." />
+                ) : records.length === 0 ? (
+                    <EmptyState message="No house resident assignments found. Try adjusting your search or filter." />
+                ) : (
+                    <>
                         <div className="table-responsive">
                             <table className="table card-table table-hover align-middle mb-0">
                                 <thead>
@@ -191,103 +244,76 @@ export default function HouseResidents() {
                                         <th>Move In</th>
                                         <th>Move Out</th>
                                         <th>Status</th>
-                                        <th>
-                                            Action
-                                        </th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    {records.map(
-                                        (
-                                            record,
-                                            index
-                                        ) => (
-                                            <tr
-                                                key={
-                                                    record.id
-                                                }
-                                            >
-                                                <td>
-                                                    {index +
-                                                        1}
-                                                </td>
+                                    {records.map((record, index) => (
+                                        <tr key={record.id}>
+                                            <td>
+                                                {(pagination.current_page - 1) * 10 + index + 1}
+                                            </td>
 
-                                                <td>
-                                                    {record.house
-                                                        ? `${record.house.house_number} (${record.house.block || "-"})`
-                                                        : "-"}
-                                                </td>
+                                            <td>
+                                                {record.house
+                                                    ? `${record.house.house_number} (${record.house.block || "-"})`
+                                                    : "-"}
+                                            </td>
 
-                                                <td>
-                                                    {record
-                                                        .resident
-                                                        ?.name ||
-                                                        "-"}
-                                                </td>
+                                            <td>{record.resident?.name || "-"}</td>
 
-                                                <td>
-                                                    {formatDate(
-                                                        record.start_date
-                                                    )}
-                                                </td>
+                                            <td>{formatDate(record.start_date)}</td>
 
-                                                <td>
-                                                    {formatDate(
-                                                        record.end_date
-                                                    )}
-                                                </td>
+                                            <td>{formatDate(record.end_date)}</td>
 
-                                                <td>
-                                                    <StatusBadge
-                                                        status={
-                                                            record.is_active
-                                                                ? "active"
-                                                                : "inactive"
-                                                        }
-                                                    />
-                                                </td>
+                                            <td>
+                                                <StatusBadge
+                                                    status={
+                                                        record.is_active ? "active" : "inactive"
+                                                    }
+                                                />
+                                            </td>
 
-                                                <td>
-                                                    <div className="d-flex gap-2">
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-warning btn-sm"
-                                                            onClick={() => {
-                                                                setEditing(
-                                                                    record
-                                                                );
-                                                                setShowForm(
-                                                                    true
-                                                                );
-                                                            }}
+                                            <td>
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => {
+                                                            setEditing(record);
+                                                            setShowForm(true);
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    {record.is_active && (
+                                                        <ConfirmButton
+                                                            message="Move this resident out of the house?"
+                                                            onConfirm={() => moveOut(record.id)}
                                                         >
-                                                            Edit
-                                                        </button>
-
-                                                        {record.is_active && (
-                                                            <ConfirmButton
-                                                                message="Move this resident out of the house?"
-                                                                onConfirm={() =>
-                                                                    moveOut(
-                                                                        record.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                Move Out
-                                                            </ConfirmButton>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )
-                                    )}
+                                                            Move Out
+                                                        </ConfirmButton>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
-                    )}
-                </div>
-            )}
+
+                        <Pagination
+                            currentPage={pagination.current_page}
+                            lastPage={pagination.last_page}
+                            total={pagination.total}
+                            label="assignment"
+                            onPage={setPage}
+                        />
+                    </>
+                )}
+            </div>
         </MainLayout>
     );
 }
