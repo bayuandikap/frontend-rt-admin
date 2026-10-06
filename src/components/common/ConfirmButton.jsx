@@ -1,7 +1,7 @@
 export default function ConfirmButton({
     children = "Delete",
     message = "Are you sure?",
-    className = "btn btn-danger btn-sm",
+    className = "btn btn-outline-danger btn-sm",
     onConfirm,
     disabled = false,
 }) {

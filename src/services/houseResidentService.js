@@ -1,7 +1,7 @@
 import api from "../api/axios";
 
-export const getHouseResidents = () =>
-    api.get("/house-residents");
+export const getHouseResidents = (params = {}) =>
+    api.get("/house-residents", { params });
 
 export const createHouseResident = (data) =>
     api.post("/house-residents", data);
