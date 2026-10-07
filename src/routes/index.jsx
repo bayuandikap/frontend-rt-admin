@@ -7,6 +7,7 @@ import {
 
 import Login from "../pages/Login";
 import MainLayout from "../components/layout/MainLayout";
+import ProtectedRoute from "../components/common/ProtectedRoute";
 
 // Lazy-loaded pages
 const Dashboard = lazy(() => import("../pages/Dashboard"));
@@ -68,43 +69,71 @@ export default function AppRoutes() {
                 {/* Dashboard */}
                 <Route
                     path="/dashboard"
-                    element={<Dashboard />}
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Houses */}
                 <Route
                     path="/houses"
-                    element={<Houses />}
+                    element={
+                        <ProtectedRoute>
+                            <Houses />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Residents */}
                 <Route
                     path="/residents"
-                    element={<Residents />}
+                    element={
+                        <ProtectedRoute>
+                            <Residents />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* House Residents */}
                 <Route
                     path="/house-residents"
-                    element={<HouseResidents />}
+                    element={
+                        <ProtectedRoute>
+                            <HouseResidents />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Payments */}
                 <Route
                     path="/payments"
-                    element={<Payments />}
+                    element={
+                        <ProtectedRoute>
+                            <Payments />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Expenses */}
                 <Route
                     path="/expenses"
-                    element={<Expenses />}
+                    element={
+                        <ProtectedRoute>
+                            <Expenses />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Reports */}
                 <Route
                     path="/reports"
-                    element={<Reports />}
+                    element={
+                        <ProtectedRoute>
+                            <Reports />
+                        </ProtectedRoute>
+                    }
                 />
 
                 {/* Unknown route */}

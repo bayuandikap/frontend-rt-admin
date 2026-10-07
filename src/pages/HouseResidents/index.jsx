@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 import MainLayout from "../../components/layout/MainLayout";
 import Loading from "../../components/common/Loading";
@@ -51,8 +52,8 @@ export default function HouseResidents() {
 
             const [houseResidentRes, houseRes, residentRes] = await Promise.all([
                 getHouseResidents({ search, is_active: filterStatus, page }),
-                getHouses(),
-                getResidents(),
+                getHouses({ per_page: 1000 }),
+                getResidents({ per_page: 1000 }),
             ]);
 
             setRecords(houseResidentRes.data.data || []);
@@ -103,12 +104,11 @@ export default function HouseResidents() {
             console.error(err);
 
             const errors = err.response?.data?.errors;
+            const message = errors
+                ? Object.values(errors).flat().join("\n")
+                : err.response?.data?.message || "Unable to save house resident.";
 
-            if (errors) {
-                alert(Object.values(errors).flat().join("\n"));
-            } else {
-                alert(err.response?.data?.message || "Unable to save house resident.");
-            }
+            Swal.fire({ icon: "error", title: "Save Failed", text: message });
         }
     }
 
@@ -123,7 +123,11 @@ export default function HouseResidents() {
             }
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Unable to move resident out.");
+            Swal.fire({
+                icon: "error",
+                title: "Move Out Failed",
+                text: err.response?.data?.message || "Unable to move resident out.",
+            });
         }
     }
 

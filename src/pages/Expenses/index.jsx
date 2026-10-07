@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 import MainLayout from "../../components/layout/MainLayout";
 import Loading from "../../components/common/Loading";
@@ -22,7 +23,12 @@ export default function Expenses() {
     const [expenses, setExpenses] = useState([]);
 
     const [search, setSearch] = useState("");
+    const [filterMonth, setFilterMonth] = useState("");
+    const [filterYear, setFilterYear] = useState("");
     const [page, setPage] = useState(1);
+
+    const CURRENT_YEAR = new Date().getFullYear();
+    const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
 
     const [pagination, setPagination] = useState({
         current_page: 1,
@@ -41,7 +47,7 @@ export default function Expenses() {
             setLoading(true);
             setError("");
 
-            const response = await getExpenses({ search, page });
+            const response = await getExpenses({ search, month: filterMonth, year: filterYear, page });
 
             setExpenses(response.data.data || []);
 
@@ -60,10 +66,20 @@ export default function Expenses() {
 
     useEffect(() => {
         loadData();
-    }, [search, page]);
+    }, [search, filterMonth, filterYear, page]);
 
     function handleSearch(value) {
         setSearch(value);
+        setPage(1);
+    }
+
+    function handleMonth(value) {
+        setFilterMonth(value);
+        setPage(1);
+    }
+
+    function handleYear(value) {
+        setFilterYear(value);
         setPage(1);
     }
 
@@ -83,12 +99,11 @@ export default function Expenses() {
             console.error(err);
 
             const errors = err.response?.data?.errors;
+            const message = errors
+                ? Object.values(errors).flat().join("\n")
+                : err.response?.data?.message || "Unable to save expense.";
 
-            if (errors) {
-                alert(Object.values(errors).flat().join("\n"));
-            } else {
-                alert(err.response?.data?.message || "Unable to save expense.");
-            }
+            Swal.fire({ icon: "error", title: "Save Failed", text: message });
         }
     }
 
@@ -103,7 +118,11 @@ export default function Expenses() {
             }
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Unable to delete expense.");
+            Swal.fire({
+                icon: "error",
+                title: "Delete Failed",
+                text: err.response?.data?.message || "Unable to delete expense.",
+            });
         }
     }
 
@@ -152,7 +171,7 @@ export default function Expenses() {
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body">
                     <div className="row g-3">
-                        <div className="col-md-12">
+                        <div className="col-md-6">
                             <label
                                 htmlFor="expenseSearch"
                                 className="form-label small fw-semibold"
@@ -168,6 +187,56 @@ export default function Expenses() {
                                 value={search}
                                 onChange={(e) => handleSearch(e.target.value)}
                             />
+                        </div>
+
+                        <div className="col-md-3">
+                            <label
+                                htmlFor="expenseMonth"
+                                className="form-label small fw-semibold"
+                            >
+                                Month
+                            </label>
+
+                            <select
+                                id="expenseMonth"
+                                className="form-select"
+                                value={filterMonth}
+                                onChange={(e) => handleMonth(e.target.value)}
+                            >
+                                <option value="">All months</option>
+                                {[
+                                    "January", "February", "March", "April",
+                                    "May", "June", "July", "August",
+                                    "September", "October", "November", "December",
+                                ].map((name, i) => (
+                                    <option key={i + 1} value={i + 1}>
+                                        {name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="col-md-3">
+                            <label
+                                htmlFor="expenseYear"
+                                className="form-label small fw-semibold"
+                            >
+                                Year
+                            </label>
+
+                            <select
+                                id="expenseYear"
+                                className="form-select"
+                                value={filterYear}
+                                onChange={(e) => handleYear(e.target.value)}
+                            >
+                                <option value="">All years</option>
+                                {YEAR_OPTIONS.map((y) => (
+                                    <option key={y} value={y}>
+                                        {y}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                 </div>

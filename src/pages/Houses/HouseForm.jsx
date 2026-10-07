@@ -9,8 +9,12 @@ export default function HouseForm({ house, onSubmit, onClose }) {
     useEffect(() => {
         if (house) {
             setHouseNumber(house.house_number);
-            setBlock(house.block);
+            setBlock(house.block ?? "");
             setStatus(house.status);
+        } else {
+            setHouseNumber("");
+            setBlock("");
+            setStatus("vacant");
         }
     }, [house]);
 
@@ -47,6 +51,7 @@ export default function HouseForm({ house, onSubmit, onClose }) {
                             onChange={(e) =>
                                 setHouseNumber(e.target.value)
                             }
+                            required
                         />
 
                     </div>
@@ -89,6 +94,7 @@ export default function HouseForm({ house, onSubmit, onClose }) {
                     </div>
 
                     <button
+                        type="submit"
                         className="btn btn-primary me-2"
                     >
                         Save
