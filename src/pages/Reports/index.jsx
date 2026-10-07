@@ -330,90 +330,54 @@ export default function Reports() {
                                 <table className="table card-table table-hover align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>
-                                                No
-                                            </th>
-                                            <th>
-                                                House
-                                            </th>
-                                            <th>
-                                                Block
-                                            </th>
-                                            <th>
-                                                Payment Type
-                                            </th>
-                                            <th>
-                                                Amount
-                                            </th>
-                                            <th>
-                                                Status
-                                            </th>
-                                            <th>
-                                                Paid Date
-                                            </th>
-                                            <th>
-                                                Notes
-                                            </th>
+                                            <th>No</th>
+                                            <th>House</th>
+                                            <th>Block</th>
+                                            <th>Payment Type</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Paid Date</th>
+                                            <th>Notes</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         {paymentDetails.map(
-                                            (
-                                                payment,
-                                                index
-                                            ) => (
-                                                <tr
-                                                    key={
-                                                        payment.id
-                                                    }
-                                                >
-                                                    <td>
-                                                        {index +
-                                                            1}
-                                                    </td>
-
-                                                    <td>
-                                                        {payment.house ||
-                                                            "-"}
-                                                    </td>
-
-                                                    <td>
-                                                        {payment.block ||
-                                                            "-"}
-                                                    </td>
-
-                                                    <td>
-                                                        {payment.payment_type ||
-                                                            "-"}
-                                                    </td>
-
-                                                    <td>
-                                                        {formatCurrency(
-                                                            payment.amount
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {
-                                                            <StatusBadge status={payment.status} />
-                                                        }
-                                                    </td>
-
-                                                    <td>
-                                                        {formatDate(
-                                                            payment.paid_at
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {payment.notes ||
-                                                            "-"}
-                                                    </td>
+                                            (payment, index) => (
+                                                <tr key={payment.id}>
+                                                    <td>{index + 1}</td>
+                                                    <td>{payment.house || "-"}</td>
+                                                    <td>{payment.block || "-"}</td>
+                                                    <td>{payment.payment_type || "-"}</td>
+                                                    <td>{formatCurrency(payment.amount)}</td>
+                                                    <td><StatusBadge status={payment.status} /></td>
+                                                    <td>{formatDate(payment.paid_at)}</td>
+                                                    <td>{payment.notes || "-"}</td>
                                                 </tr>
                                             )
                                         )}
                                     </tbody>
+
+                                    <tfoot className="table-group-divider fw-semibold">
+                                        <tr>
+                                            <td colSpan={4} className="text-end">Total</td>
+                                            <td>
+                                                {formatCurrency(
+                                                    paymentDetails.reduce(
+                                                        (sum, p) => sum + Number(p.amount),
+                                                        0
+                                                    )
+                                                )}
+                                            </td>
+                                            <td colSpan={3}>
+                                                <span className="text-muted small">
+                                                    {paymentDetails.filter(p => p.status === "paid").length} paid
+                                                    {" / "}
+                                                    {paymentDetails.filter(p => p.status === "unpaid").length} unpaid
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         )}
@@ -434,68 +398,42 @@ export default function Reports() {
                                 <table className="table card-table table-hover align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>
-                                                No
-                                            </th>
-                                            <th>
-                                                Title
-                                            </th>
-                                            <th>
-                                                Amount
-                                            </th>
-                                            <th>
-                                                Date
-                                            </th>
-                                            <th>
-                                                Description
-                                            </th>
+                                            <th>No</th>
+                                            <th>Title</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                            <th>Description</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         {expenseDetails.map(
-                                            (
-                                                expense,
-                                                index
-                                            ) => (
-                                                <tr
-                                                    key={
-                                                        expense.id
-                                                    }
-                                                >
-                                                    <td>
-                                                        {index +
-                                                            1}
-                                                    </td>
-
-                                                    <td>
-                                                        <strong>
-                                                            {
-                                                                expense.title
-                                                            }
-                                                        </strong>
-                                                    </td>
-
-                                                    <td>
-                                                        {formatCurrency(
-                                                            expense.amount
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {formatDate(
-                                                            expense.expense_date
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {expense.description ||
-                                                            "-"}
-                                                    </td>
+                                            (expense, index) => (
+                                                <tr key={expense.id}>
+                                                    <td>{index + 1}</td>
+                                                    <td><strong>{expense.title}</strong></td>
+                                                    <td>{formatCurrency(expense.amount)}</td>
+                                                    <td>{formatDate(expense.expense_date)}</td>
+                                                    <td>{expense.description || "-"}</td>
                                                 </tr>
                                             )
                                         )}
                                     </tbody>
+
+                                    <tfoot className="table-group-divider fw-semibold">
+                                        <tr>
+                                            <td colSpan={2} className="text-end">Total</td>
+                                            <td>
+                                                {formatCurrency(
+                                                    expenseDetails.reduce(
+                                                        (sum, e) => sum + Number(e.amount),
+                                                        0
+                                                    )
+                                                )}
+                                            </td>
+                                            <td colSpan={2} />
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         )}

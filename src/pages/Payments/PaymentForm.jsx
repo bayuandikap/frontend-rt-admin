@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 import { getHouses } from "../../services/houseService";
 import { getPaymentTypes } from "../../services/paymentTypeService";
@@ -36,7 +37,7 @@ export default function PaymentForm({
             setLoading(true);
 
             const [housesRes, paymentTypeRes] = await Promise.all([
-                getHouses(),
+                getHouses({ per_page: 1000 }),
                 getPaymentTypes(),
             ]);
 
@@ -45,10 +46,11 @@ export default function PaymentForm({
         } catch (err) {
             console.error(err);
 
-            alert(
-                err.response?.data?.message ||
-                "Unable to load payment form data."
-            );
+            Swal.fire({
+                icon: "error",
+                title: "Load Failed",
+                text: err.response?.data?.message || "Unable to load payment form data.",
+            });
         } finally {
             setLoading(false);
         }
@@ -96,32 +98,32 @@ export default function PaymentForm({
         e.preventDefault();
 
         if (!houseId) {
-            alert("Please select a house.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please select a house." });
             return;
         }
 
         if (!paymentTypeId) {
-            alert("Please select a payment type.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please select a payment type." });
             return;
         }
 
         if (!month) {
-            alert("Please select a month.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please select a month." });
             return;
         }
 
         if (!year || year < 2000 || year > 2100) {
-            alert("Please enter a valid year.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please enter a valid year." });
             return;
         }
 
         if (amount === "" || Number(amount) < 0) {
-            alert("Please enter a valid payment amount.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please enter a valid payment amount." });
             return;
         }
 
         if (status === "paid" && !paidAt) {
-            alert("Please enter the paid date for a paid payment.");
+            Swal.fire({ icon: "warning", title: "Validation", text: "Please enter the paid date for a paid payment." });
             return;
         }
 

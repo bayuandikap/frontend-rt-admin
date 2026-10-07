@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 import MainLayout from "../../components/layout/MainLayout";
 import Loading from "../../components/common/Loading";
@@ -89,12 +90,11 @@ export default function Houses() {
             console.error(err);
 
             const errors = err.response?.data?.errors;
+            const message = errors
+                ? Object.values(errors).flat().join("\n")
+                : err.response?.data?.message || "Unable to save house.";
 
-            if (errors) {
-                alert(Object.values(errors).flat().join("\n"));
-            } else {
-                alert(err.response?.data?.message || "Unable to save house.");
-            }
+            Swal.fire({ icon: "error", title: "Save Failed", text: message });
         }
     }
 
@@ -109,7 +109,11 @@ export default function Houses() {
             }
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Unable to delete house.");
+            Swal.fire({
+                icon: "error",
+                title: "Delete Failed",
+                text: err.response?.data?.message || "Unable to delete house.",
+            });
         }
     }
 

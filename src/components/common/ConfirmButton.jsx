@@ -1,3 +1,5 @@
+import Swal from "sweetalert2";
+
 export default function ConfirmButton({
     children = "Delete",
     message = "Are you sure?",
@@ -5,8 +7,18 @@ export default function ConfirmButton({
     onConfirm,
     disabled = false,
 }) {
-    function handleClick() {
-        if (window.confirm(message)) {
+    async function handleClick() {
+        const result = await Swal.fire({
+            icon: "warning",
+            title: "Confirm",
+            text: message,
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d63939",
+        });
+
+        if (result.isConfirmed) {
             onConfirm();
         }
     }

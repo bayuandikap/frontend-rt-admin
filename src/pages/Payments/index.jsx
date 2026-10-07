@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 import MainLayout from "../../components/layout/MainLayout";
 import Loading from "../../components/common/Loading";
@@ -17,6 +18,8 @@ import {
     deletePayment,
 } from "../../services/paymentService";
 
+import { getPaymentTypes } from "../../services/paymentTypeService";
+
 import { formatCurrency, formatDate } from "../../utils/format";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -24,9 +27,12 @@ const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
 
 export default function Payments() {
     const [payments, setPayments] = useState([]);
+    const [summary, setSummary] = useState(null);
+    const [paymentTypes, setPaymentTypes] = useState([]);
 
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
+    const [filterPaymentType, setFilterPaymentType] = useState("");
     const [filterYear, setFilterYear] = useState("");
     const [filterMonth, setFilterMonth] = useState("");
     const [page, setPage] = useState(1);
@@ -43,6 +49,12 @@ export default function Payments() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    useEffect(() => {
+        getPaymentTypes()
+            .then((res) => setPaymentTypes(res.data || []))
+            .catch((err) => console.error("Failed to load payment types", err));
+    }, []);
+
     async function loadData() {
         try {
             setLoading(true);
@@ -52,11 +64,13 @@ export default function Payments() {
                 page,
                 search,
                 status: filterStatus,
+                payment_type_id: filterPaymentType,
                 year: filterYear,
                 month: filterMonth,
             });
 
             setPayments(res.data.data || []);
+            setSummary(res.data.summary || null);
 
             setPagination({
                 current_page: res.data.meta?.current_page || 1,
@@ -73,7 +87,7 @@ export default function Payments() {
 
     useEffect(() => {
         loadData();
-    }, [page, search, filterStatus, filterYear, filterMonth]);
+    }, [page, search, filterStatus, filterPaymentType, filterYear, filterMonth]);
 
     function resetPage() {
         setPage(1);
@@ -95,14 +109,11 @@ export default function Payments() {
             console.error(err);
 
             const errors = err.response?.data?.errors;
+            const message = errors
+                ? Object.values(errors).flat().join("\n")
+                : err.response?.data?.message || "Unable to save payment.";
 
-            if (errors) {
-                alert(Object.values(errors).flat().join("\n"));
-            } else if (err.response?.status === 422) {
-                alert(err.response?.data?.message || "This payment already exists.");
-            } else {
-                alert(err.response?.data?.message || "Unable to save payment.");
-            }
+            Swal.fire({ icon: "error", title: "Save Failed", text: message });
         }
     }
 
@@ -117,7 +128,11 @@ export default function Payments() {
             }
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Unable to delete payment.");
+            Swal.fire({
+                icon: "error",
+                title: "Delete Failed",
+                text: err.response?.data?.message || "Unable to delete payment.",
+            });
         }
     }
 
@@ -162,11 +177,58 @@ export default function Payments() {
                 />
             )}
 
+            {/* Payment Summary */}
+            {!loading && summary && (
+                <div className="row g-3 mb-4">
+                    <div className="col-6 col-md-3">
+                        <div className="card border-0 shadow-sm h-100">
+                            <div className="card-body">
+                                <div className="text-muted small mb-1">Total Bills</div>
+                                <div className="fs-4 fw-bold">{summary.total_payments}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-6 col-md-3">
+                        <div className="card border-0 shadow-sm h-100">
+                            <div className="card-body">
+                                <div className="text-muted small mb-1">Paid</div>
+                                <div className="fs-4 fw-bold text-success">{summary.paid_payments}</div>
+                                <div className="text-muted small">{formatCurrency(summary.total_paid_amount)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-6 col-md-3">
+                        <div className="card border-0 shadow-sm h-100">
+                            <div className="card-body">
+                                <div className="text-muted small mb-1">Unpaid</div>
+                                <div className="fs-4 fw-bold text-danger">{summary.unpaid_payments}</div>
+                                <div className="text-muted small">{formatCurrency(summary.total_unpaid_amount)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-6 col-md-3">
+                        <div className="card border-0 shadow-sm h-100">
+                            <div className="card-body">
+                                <div className="text-muted small mb-1">Collection Rate</div>
+                                <div className="fs-4 fw-bold">
+                                    {summary.total_payments > 0
+                                        ? Math.round((summary.paid_payments / summary.total_payments) * 100)
+                                        : 0}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Filters */}
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body">
                     <div className="row g-3">
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label
                                 htmlFor="paymentSearch"
                                 className="form-label small fw-semibold"
@@ -185,6 +247,32 @@ export default function Payments() {
                                     resetPage();
                                 }}
                             />
+                        </div>
+
+                        <div className="col-md-2">
+                            <label
+                                htmlFor="paymentType"
+                                className="form-label small fw-semibold"
+                            >
+                                Type
+                            </label>
+
+                            <select
+                                id="paymentType"
+                                className="form-select"
+                                value={filterPaymentType}
+                                onChange={(e) => {
+                                    setFilterPaymentType(e.target.value);
+                                    resetPage();
+                                }}
+                            >
+                                <option value="">All types</option>
+                                {paymentTypes.map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                        {t.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="col-md-2">
